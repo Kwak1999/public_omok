@@ -1,18 +1,16 @@
-import './App.css'
-import Navbar from "./components/Navbar.jsx";
-import {useState} from "react";
-import Board from "./components/Board.jsx";
-import Home from "./components/Home.jsx";
+import './App.css';
+import PageShell from '@ui/layout/PageShell.jsx';
+import Home from '@ui/pages/Home.jsx';
+import useDarkMode from '@shared/hooks/useDarkMode.js';
 
 function App() {
-    const [darkMode, setDarkMode] = useState(false)
+  const { darkMode, toggleDarkMode } = useDarkMode();
 
   return (
-    <div className={darkMode ? 'dark' : ''}>
-        <Navbar darkMode={darkMode} setDarkMode={setDarkMode}/>
-        <Home />
-    </div>
-  )
+    <PageShell darkMode={darkMode} onToggleTheme={toggleDarkMode}>
+      <Home />
+    </PageShell>
+  );
 }
 
-export default App
+export default App;
