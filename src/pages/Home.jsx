@@ -1,5 +1,5 @@
 import React from 'react';
-import Board from "./Board.jsx";
+import Board from "../components/omok/Board.jsx";
 
 const Home = () => {
     return (
