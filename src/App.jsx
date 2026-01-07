@@ -1,8 +1,7 @@
 import './App.css'
 import Navbar from "./components/Navbar.jsx";
 import {useState} from "react";
-import Board from "./components/Board.jsx";
-import Home from "./components/Home.jsx";
+import Home from "./pages/Home.jsx";
 
 function App() {
     const [darkMode, setDarkMode] = useState(false)
