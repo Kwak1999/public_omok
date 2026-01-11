@@ -7,7 +7,7 @@ const Cell = ({ row, col }) => {
     board, 
     selectedPosition, 
     setSelectedPosition,
-    placeStone 
+    winner
   } = useGameStore();
   
   const cellValue = board[row][col];
@@ -20,6 +20,8 @@ const Cell = ({ row, col }) => {
   const top = row * CELL_GAP - clickableSize / 2;
   
   const handleClick = () => {
+    // 승자가 있으면 클릭 불가
+    if (winner) return;
     // 이미 돌이 있는 위치는 클릭 불가
     if (!isEmpty) return;
     

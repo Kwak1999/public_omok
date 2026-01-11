@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { BOARD_SIZE, PLAYER } from '../utils/constants';
+import { checkWinner } from '../utils/checkWinner';
 
 const useGameStore = create((set) => ({
   // 게임 보드 상태 (15x15 배열)
@@ -9,6 +10,9 @@ const useGameStore = create((set) => ({
   
   // 현재 플레이어 (흑돌이 먼저)
   currentPlayer: PLAYER.BLACK,
+  
+  // 승자 (null, 'black', 'white')
+  winner: null,
   
   // 선택된 위치 (착수 전 미리보기)
   selectedPosition: null, // { row, col } 또는 null
@@ -21,6 +25,9 @@ const useGameStore = create((set) => ({
   
   // 착수 (선택된 위치에 돌 놓기)
   placeStone: () => set((state) => {
+    // 이미 승자가 있으면 착수 불가
+    if (state.winner) return state;
+    
     if (!state.selectedPosition) return state;
     
     const { row, col } = state.selectedPosition;
@@ -39,6 +46,18 @@ const useGameStore = create((set) => ({
         return cell;
       })
     );
+    
+    // 승리 체크
+    const isWinner = checkWinner(newBoard, row, col, state.currentPlayer);
+    
+    // 승자가 결정되면 게임 종료
+    if (isWinner) {
+      return {
+        board: newBoard,
+        winner: state.currentPlayer,
+        selectedPosition: null,
+      };
+    }
     
     // 다음 플레이어로 전환
     const nextPlayer = state.currentPlayer === PLAYER.BLACK 
@@ -59,6 +78,7 @@ const useGameStore = create((set) => ({
     ),
     currentPlayer: PLAYER.BLACK,
     selectedPosition: null,
+    winner: null,
   }),
 }));
 
