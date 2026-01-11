@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { BOARD_SIZE, PLAYER } from '../utils/constants';
 import { checkWinner } from '../utils/checkWinner';
+import { checkRenjuRule } from '../hooks/omok/useRenjuRule';
+import useMultiplayerStore from './useMultiplayerStore';
 
-const useGameStore = create((set) => ({
+const useGameStore = create((set, get) => ({
   // 게임 보드 상태 (15x15 배열)
   board: Array(BOARD_SIZE).fill(null).map(() => 
     Array(BOARD_SIZE).fill(PLAYER.EMPTY)
@@ -24,62 +26,121 @@ const useGameStore = create((set) => ({
   clearSelectedPosition: () => set({ selectedPosition: null }),
   
   // 착수 (선택된 위치에 돌 놓기)
-  placeStone: () => set((state) => {
-    // 이미 승자가 있으면 착수 불가
-    if (state.winner) return state;
+  placeStone: () => {
+    const state = get();
+    const multiplayerState = useMultiplayerStore.getState();
     
-    if (!state.selectedPosition) return state;
-    
-    const { row, col } = state.selectedPosition;
-    
-    // 이미 돌이 있는 위치면 착수 불가
-    if (state.board[row][col] !== PLAYER.EMPTY) {
-      return state;
+    // 멀티플레이어 모드면 서버로 전송
+    if (multiplayerState.isMultiplayer) {
+      if (!state.selectedPosition) return;
+      
+      const { row, col } = state.selectedPosition;
+      
+      // 자신의 차례인지 확인
+      if (multiplayerState.myPlayer !== state.currentPlayer) {
+        console.log('자신의 차례가 아닙니다.');
+        return;
+      }
+      
+      // 서버로 착수 요청
+      multiplayerState.placeStone(row, col);
+      set({ selectedPosition: null });
+      return;
     }
     
-    // 보드 복사 및 업데이트
-    const newBoard = state.board.map((rowArr, r) =>
-      rowArr.map((cell, c) => {
-        if (r === row && c === col) {
-          return state.currentPlayer;
-        }
-        return cell;
-      })
-    );
-    
-    // 승리 체크
-    const isWinner = checkWinner(newBoard, row, col, state.currentPlayer);
-    
-    // 승자가 결정되면 게임 종료
-    if (isWinner) {
+    // 싱글플레이어 모드 (기존 로직)
+    set((state) => {
+      // 이미 승자가 있으면 착수 불가
+      if (state.winner) return state;
+      
+      if (!state.selectedPosition) return state;
+      
+      const { row, col } = state.selectedPosition;
+      
+      // 이미 돌이 있는 위치면 착수 불가
+      if (state.board[row][col] !== PLAYER.EMPTY) {
+        return state;
+      }
+      
+      // 렌주룰 체크 (흑돌만)
+      const renjuCheck = checkRenjuRule(state.board, row, col, state.currentPlayer);
+      if (!renjuCheck.isValid) {
+        alert(renjuCheck.reason);
+        return state;
+      }
+      
+      // 보드 복사 및 업데이트
+      const newBoard = state.board.map((rowArr, r) =>
+        rowArr.map((cell, c) => {
+          if (r === row && c === col) {
+            return state.currentPlayer;
+          }
+          return cell;
+        })
+      );
+      
+      // 승리 체크
+      const isWinner = checkWinner(newBoard, row, col, state.currentPlayer);
+      
+      // 승자가 결정되면 게임 종료
+      if (isWinner) {
+        return {
+          board: newBoard,
+          winner: state.currentPlayer,
+          selectedPosition: null,
+        };
+      }
+      
+      // 다음 플레이어로 전환
+      const nextPlayer = state.currentPlayer === PLAYER.BLACK 
+        ? PLAYER.WHITE 
+        : PLAYER.BLACK;
+      
       return {
         board: newBoard,
-        winner: state.currentPlayer,
-        selectedPosition: null,
+        currentPlayer: nextPlayer,
+        selectedPosition: null, // 착수 후 선택 해제
       };
-    }
-    
-    // 다음 플레이어로 전환
-    const nextPlayer = state.currentPlayer === PLAYER.BLACK 
-      ? PLAYER.WHITE 
-      : PLAYER.BLACK;
-    
-    return {
-      board: newBoard,
-      currentPlayer: nextPlayer,
-      selectedPosition: null, // 착수 후 선택 해제
-    };
-  }),
+    });
+  },
   
   // 게임 리셋
-  resetGame: () => set({
-    board: Array(BOARD_SIZE).fill(null).map(() => 
-      Array(BOARD_SIZE).fill(PLAYER.EMPTY)
-    ),
-    currentPlayer: PLAYER.BLACK,
-    selectedPosition: null,
-    winner: null,
-  }),
+  resetGame: (callback) => {
+    const multiplayerState = useMultiplayerStore.getState();
+    
+    // 멀티플레이어 모드면 서버로 전송
+    if (multiplayerState.isMultiplayer) {
+      multiplayerState.resetGame((response) => {
+        if (!response.success && callback) {
+          callback(response);
+        } else if (callback) {
+          callback(response);
+        }
+      });
+      return;
+    }
+    
+    // 싱글플레이어 모드
+    set({
+      board: Array(BOARD_SIZE).fill(null).map(() => 
+        Array(BOARD_SIZE).fill(PLAYER.EMPTY)
+      ),
+      currentPlayer: PLAYER.BLACK,
+      selectedPosition: null,
+      winner: null,
+    });
+    if (callback) callback({ success: true });
+  },
+  
+  // 멀티플레이어 상태 동기화 (서버에서 받은 데이터로 업데이트)
+  syncMultiplayerState: (board, currentPlayer, winner) => {
+    set({
+      board,
+      currentPlayer,
+      winner,
+      selectedPosition: null,
+    });
+  },
 }));
 
 export default useGameStore;
