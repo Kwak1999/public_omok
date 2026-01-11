@@ -7,7 +7,7 @@ class SocketService {
   }
 
   // 서버 연결
-  connect(serverUrl = 'http://localhost:3001') {
+  connect(serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001') {
     if (this.socket?.connected) {
       return this.socket;
     }
