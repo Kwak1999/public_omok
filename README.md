@@ -242,6 +242,7 @@ pm2 start ecosystem.config.js --env production
 **프론트엔드:**
 ```bash
 npm install
+
 VITE_SERVER_URL=https://api.yourdomain.com npm run build
 # dist/ 디렉토리를 웹 서버에 배포
 ```
@@ -288,3 +289,7 @@ VITE_SERVER_URL=https://api.yourdomain.com npm run build
 ---
 
 **즐거운 게임 되세요! 🎮**
+=======
+npm install -D tailwindcss@3 postcss autoprefixer
+npx tailwindcss init -p
+npm install react-icons
