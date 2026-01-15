@@ -1,9 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Board from "../components/omok/Board.jsx";
+import { loginAsGuest, isGuestLoggedIn, getGuestInfo } from '../utils/guestAuth';
 
 const Home = () => {
     const navigate = useNavigate();
+    const [guestId, setGuestId] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        // 게스트 로그인 상태 확인
+        const loggedIn = isGuestLoggedIn();
+        setIsLoggedIn(loggedIn);
+        
+        if (loggedIn) {
+            const info = getGuestInfo();
+            if (info) {
+                setGuestId(info.id);
+            }
+        }
+    }, []);
+
+    const handleGuestLogin = () => {
+        const id = loginAsGuest();
+        setGuestId(id);
+        setIsLoggedIn(true);
+    };
+
+    const handleGoToRooms = () => {
+        if (!isLoggedIn) {
+            alert('게스트 로그인이 필요합니다.');
+            return;
+        }
+        navigate('/rooms');
+    };
     
     return (
         <div className="bg-slate-100 min-h-screen dark:bg-neutral-700 pt-20">
@@ -12,16 +42,33 @@ const Home = () => {
                     <h1 className="text-4xl font-bold text-neutral-700 dark:text-gray-300 mb-4">
                         오목 게임
                     </h1>
-                    <div className="flex gap-4 justify-center">
-                        <button
-                            onClick={() => navigate('/rooms')}
-                            className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold text-lg"
-                        >
-                            공개방 입장
-                        </button>
-                    </div>
+                    {!isLoggedIn ? (
+                        <div className="flex flex-col items-center gap-4">
+                            <p className="text-gray-600 dark:text-gray-400 mb-2">
+                                게임을 시작하려면 게스트 로그인이 필요합니다.
+                            </p>
+                            <button
+                                onClick={handleGuestLogin}
+                                className="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition font-semibold text-lg"
+                            >
+                                게스트
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                게스트 ID: <span className="font-mono">{guestId}</span>
+                            </div>
+                            <button
+                                onClick={handleGoToRooms}
+                                className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold text-lg"
+                            >
+                                공개방 입장
+                            </button>
+                        </div>
+                    )}
                 </div>
-                <Board />
+                {isLoggedIn && <Board />}
             </div>
         </div>
     );

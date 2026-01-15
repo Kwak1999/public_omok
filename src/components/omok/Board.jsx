@@ -214,75 +214,99 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                             </button>
                         ) : null
                     ) : (
-                        <>
-                            <button 
-                                onClick={handlePlaceStone}
-                                disabled={!selectedPosition || (isMultiplayer && myPlayer !== currentPlayer)}
-                                className={`px-6 py-2 rounded-md font-semibold transition ${
-                                    selectedPosition && (!isMultiplayer || myPlayer === currentPlayer)
-                                        ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                }`}
-                            >
-                                착수
-                            </button>
-                            {selectedPosition && (
-                                <button 
-                                    onClick={handleCancel}
-                                    className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
-                                >
-                                    취소
-                                </button>
-                            )}
-                        </>
-                    )}
-                </div>
-                
-                {/* 공개방 모드일 때 Ready/Start/새게임 버튼 표시 (멀티플레이어 설정 버튼 자리) */}
-                {isPublicRoom && roomData && roomData.players.length === 2 ? (
-                    <div className="flex gap-3 justify-center">
-                        {winner ? (
-                            // 게임이 끝났을 때: 일반 유저는 Ready 버튼
-                            !isHost && (
-                                <button
-                                    onClick={onToggleReady}
-                                    className={`px-6 py-2 rounded-md font-semibold transition ${
-                                        myPublicPlayer?.isReady
-                                            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-                                            : 'bg-green-500 text-white hover:bg-green-600'
-                                    }`}
-                                >
-                                    {myPublicPlayer?.isReady ? 'Ready 취소' : 'Ready'}
-                                </button>
-                            )
-                        ) : !isPlaying ? (
-                            // 게임이 진행 중이 아닐 때: Ready/Start 버튼
-                            !isHost ? (
-                                <button
-                                    onClick={onToggleReady}
-                                    className={`px-6 py-2 rounded-md font-semibold transition ${
-                                        myPublicPlayer?.isReady
-                                            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-                                            : 'bg-green-500 text-white hover:bg-green-600'
-                                    }`}
-                                >
-                                    {myPublicPlayer?.isReady ? 'Ready 취소' : 'Ready'}
-                                </button>
+                        // 공개방 모드일 때: 게임 시작 전에는 START/Ready 버튼, 게임 중에는 착수 버튼
+                        isPublicRoom && roomData && roomData.players.length === 2 ? (
+                            !isPlaying ? (
+                                // 게임 시작 전: 방장은 START, 유저는 Ready
+                                isHost ? (
+                                    <button
+                                        onClick={onStartGame}
+                                        disabled={!guestReady}
+                                        className={`px-6 py-2 rounded-md font-semibold transition ${
+                                            guestReady
+                                                ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
+                                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        }`}
+                                        title={!guestReady ? '참가자가 Ready 상태가 되어야 합니다' : ''}
+                                    >
+                                        START
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={onToggleReady}
+                                        className={`px-6 py-2 rounded-md font-semibold transition ${
+                                            myPublicPlayer?.isReady
+                                                ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                                                : 'bg-green-500 text-white hover:bg-green-600'
+                                        }`}
+                                    >
+                                        {myPublicPlayer?.isReady ? 'Ready 취소' : 'Ready'}
+                                    </button>
+                                )
                             ) : (
-                                <button
-                                    onClick={onStartGame}
-                                    disabled={!guestReady}
+                                // 게임 진행 중: 착수 버튼
+                                <>
+                                    <button 
+                                        onClick={handlePlaceStone}
+                                        disabled={!selectedPosition || (isMultiplayer && myPlayer !== currentPlayer)}
+                                        className={`px-6 py-2 rounded-md font-semibold transition ${
+                                            selectedPosition && (!isMultiplayer || myPlayer === currentPlayer)
+                                                ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
+                                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        착수
+                                    </button>
+                                    {selectedPosition && (
+                                        <button 
+                                            onClick={handleCancel}
+                                            className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
+                                        >
+                                            취소
+                                        </button>
+                                    )}
+                                </>
+                            )
+                        ) : (
+                            // 공개방이 아니거나 플레이어가 2명이 아닐 때: 기존 착수 버튼
+                            <>
+                                <button 
+                                    onClick={handlePlaceStone}
+                                    disabled={!selectedPosition || (isMultiplayer && myPlayer !== currentPlayer)}
                                     className={`px-6 py-2 rounded-md font-semibold transition ${
-                                        guestReady
+                                        selectedPosition && (!isMultiplayer || myPlayer === currentPlayer)
                                             ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
                                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                     }`}
-                                    title={!guestReady ? '참가자가 Ready 상태가 되어야 합니다' : ''}
                                 >
-                                    START
+                                    착수
                                 </button>
-                            )
-                        ) : null}
+                                {selectedPosition && (
+                                    <button 
+                                        onClick={handleCancel}
+                                        className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
+                                    >
+                                        취소
+                                    </button>
+                                )}
+                            </>
+                        )
+                    )}
+                </div>
+                
+                {/* 공개방 모드일 때 게임 종료 후 Ready 버튼 (유저만) */}
+                {isPublicRoom && roomData && roomData.players.length === 2 && winner && !isHost ? (
+                    <div className="flex gap-3 justify-center">
+                        <button
+                            onClick={onToggleReady}
+                            className={`px-6 py-2 rounded-md font-semibold transition ${
+                                myPublicPlayer?.isReady
+                                    ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                                    : 'bg-green-500 text-white hover:bg-green-600'
+                            }`}
+                        >
+                            {myPublicPlayer?.isReady ? 'Ready 취소' : 'Ready'}
+                        </button>
                     </div>
                 ) : !isPublicRoom && !winner ? (
                     /* 멀티플레이어 버튼 - 공개방이 아니고 게임이 진행 중이 아닐 때만 표시 */

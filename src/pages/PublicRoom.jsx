@@ -4,6 +4,7 @@ import Board from '../components/omok/Board';
 import socketService from '../services/socketService';
 import useMultiplayerStore from '../stores/useMultiplayerStore';
 import useGameStore from '../stores/useGameStore';
+import { isGuestLoggedIn } from '../utils/guestAuth';
 
 const PublicRoom = () => {
   const { roomId } = useParams();
@@ -15,6 +16,13 @@ const PublicRoom = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // 게스트 로그인 확인
+    if (!isGuestLoggedIn()) {
+      setError('게스트 로그인이 필요합니다.');
+      setLoading(false);
+      return;
+    }
+
     // Socket 연결
     if (!isConnected) {
       connect('http://localhost:3001');
@@ -31,12 +39,15 @@ const PublicRoom = () => {
     socket.emit('joinPublicRoom', { roomId }, (response) => {
       if (response.success) {
         setRoom(response.room);
+        // 이전 게임 결과 초기화
+        useGameStore.getState().resetGame();
         // 멀티플레이어 모드 설정
         useMultiplayerStore.setState({
           isMultiplayer: true,
           roomId: response.room.id,
           myPlayer: response.room.players.find(p => p.socketId === socket.id)?.playerType || null,
           players: response.room.players,
+          gameEndedPlayer: null, // 게임 종료 상태도 초기화
         });
         setLoading(false);
       } else {
@@ -110,6 +121,30 @@ const PublicRoom = () => {
     });
   };
 
+  const handleLeaveRoom = () => {
+    const socket = socketService.getSocket();
+    if (!socket) return;
+
+    if (room?.status === 'playing') {
+      const shouldLeave = window.confirm('게임 진행 중입니다. 방에서 나가시겠습니까?');
+      if (!shouldLeave) return;
+    }
+
+    socket.emit('leavePublicRoom', { roomId }, (response) => {
+      if (!response?.success) {
+        alert('방 나가기 실패: ' + (response?.error || '알 수 없는 오류'));
+        return;
+      }
+      useMultiplayerStore.setState({
+        isMultiplayer: false,
+        roomId: null,
+        myPlayer: null,
+        players: [],
+      });
+      navigate('/rooms');
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 flex items-center justify-center">
@@ -149,20 +184,14 @@ const PublicRoom = () => {
   const isPlaying = room.status === 'playing';
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700">
+    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-20">
       {/* 방 정보 및 컨트롤 */}
       <div className="bg-white dark:bg-neutral-800 shadow-md p-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => !isPlaying && navigate('/rooms')}
-              disabled={isPlaying}
-              className={`px-4 py-2 rounded-md transition ${
-                isPlaying
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-500 text-white hover:bg-gray-600'
-              }`}
-              title={isPlaying ? '게임이 진행 중입니다' : ''}
+              onClick={handleLeaveRoom}
+              className="px-4 py-2 rounded-md transition bg-gray-500 text-white hover:bg-gray-600"
             >
               ← 방 목록
             </button>
@@ -194,6 +223,12 @@ const PublicRoom = () => {
                 </div>
               ))}
             </div>
+            <button
+              onClick={handleLeaveRoom}
+              className="px-4 py-2 rounded-md transition bg-red-500 text-white hover:bg-red-600"
+            >
+              나가기
+            </button>
 
           </div>
         </div>
