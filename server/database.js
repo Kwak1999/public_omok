@@ -16,7 +16,7 @@ if (!existsSync(dbDir)) {
 const db = new Database(join(dbDir, 'omok.db'));
 
 // 데이터베이스 초기화
-export function initDatabase() {
+export function initDatabase({ resetOnStart = false } = {}) {
   // 방 테이블
   db.exec(`
     CREATE TABLE IF NOT EXISTS rooms (
@@ -47,6 +47,12 @@ export function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_rooms_status ON rooms(status);
     CREATE INDEX IF NOT EXISTS idx_players_room ON players(room_id);
   `);
+
+  if (resetOnStart) {
+    db.exec('DELETE FROM players');
+    db.exec('DELETE FROM rooms');
+    console.log('🧹 서버 재시작으로 데이터베이스를 초기화했습니다.');
+  }
 
   console.log('✅ 데이터베이스 초기화 완료');
 }
@@ -191,19 +197,44 @@ export function startGame(roomId) {
 
 // 플레이어 제거
 export function removePlayer(roomId, socketId) {
+  const roomBefore = getRoom(roomId);
+  if (!roomBefore) return null;
+
+  const wasHost = roomBefore.host_socket_id === socketId;
+
   db.prepare(`
     DELETE FROM players WHERE room_id = ? AND socket_id = ?
   `).run(roomId, socketId);
 
-  const room = getRoom(roomId);
+  let roomAfter = getRoom(roomId);
   
   // 플레이어가 없으면 방 삭제
-  if (!room || room.players.length === 0) {
+  if (!roomAfter || roomAfter.players.length === 0) {
     db.prepare('DELETE FROM rooms WHERE id = ?').run(roomId);
     return null;
   }
 
-  return room;
+  // 방장이 나갔으면 남은 플레이어를 방장으로 승격
+  if (wasHost) {
+    const newHostSocketId = roomAfter.players[0]?.socketId;
+    if (newHostSocketId) {
+      db.prepare(`
+        UPDATE rooms SET host_id = ?, host_socket_id = ? WHERE id = ?
+      `).run(newHostSocketId, newHostSocketId, roomId);
+    }
+  }
+
+  // 게임 중 이탈 시 대기 상태로 복구
+  if (roomAfter.status === 'playing') {
+    db.prepare(`
+      UPDATE rooms SET status = 'waiting', started_at = NULL WHERE id = ?
+    `).run(roomId);
+    db.prepare(`
+      UPDATE players SET is_ready = 0 WHERE room_id = ?
+    `).run(roomId);
+  }
+
+  return getRoom(roomId);
 }
 
 // 방 삭제

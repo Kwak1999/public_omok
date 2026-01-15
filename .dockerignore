@@ -1,0 +1,39 @@
+# Node modules
+node_modules
+server/node_modules
+
+# 빌드 결과물
+dist
+dist-ssr
+
+# 로그 파일
+*.log
+logs
+server/logs
+
+# 환경 변수 파일
+.env
+.env.local
+.env.*.local
+server/.env
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 기타
+*.md
+!README.md
+.eslintrc*
+.prettierrc*

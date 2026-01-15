@@ -66,11 +66,6 @@ const Navbar = ({darkMode, setDarkMode}) => {
                             {darkMode ? 'Dark' : 'Light'}
                         </span>
                     </label>
-
-                    <button className = 'mr-4 text-black bg-transparent border-none dark:text-gray-300'>
-                        Sign In
-                    </button>
-                    <button className='px-4 py-2'>Sign Up</button>
                 </div>
 
 
@@ -119,11 +114,6 @@ const Navbar = ({darkMode, setDarkMode}) => {
                         공개방
                     </Link>
                 </li>
-
-                <div className='flex flex-col my-4'>
-                    <button className='px-8 py-3 mb-4 text-slate-600 bg-transparent'>Sign In</button>
-                    <button className='px-8 py-3'>Sign Up</button>
-                </div>
             </ul>
         </nav>
 

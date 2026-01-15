@@ -17,8 +17,8 @@ import {
   swapPlayerTypes,
 } from './database.js';
 
-// 데이터베이스 초기화
-initDatabase();
+// 데이터베이스 초기화 (서버 재시작 시 초기화)
+initDatabase({ resetOnStart: true });
 
 const app = express();
 app.use(cors());
@@ -384,6 +384,68 @@ io.on('connection', (socket) => {
 
       if (callback) callback({ success: true, room });
       console.log(`플레이어 공개방 참가: ${roomId} - ${socket.id}`);
+    } catch (error) {
+      if (callback) callback({ success: false, error: error.message });
+      socket.emit('error', { message: error.message });
+    }
+  });
+
+  // 공개방 나가기
+  socket.on('leavePublicRoom', (data, callback) => {
+    const { roomId } = data;
+
+    try {
+      const room = getRoom(roomId);
+      if (!room) {
+        if (callback) callback({ success: false, error: '방을 찾을 수 없습니다.' });
+        return;
+      }
+
+      // 방에 속한 플레이어인지 확인
+      const isMember = room.players.some(p => p.socketId === socket.id);
+      if (!isMember) {
+        if (callback) callback({ success: false, error: '방에 참가한 플레이어가 아닙니다.' });
+        return;
+      }
+
+      socket.leave(roomId);
+
+      const updatedRoom = removePlayer(roomId, socket.id);
+
+      if (updatedRoom) {
+        // 메모리 방 상태 업데이트
+        if (rooms.has(roomId)) {
+          rooms.set(roomId, {
+            players: updatedRoom.players.map(p => ({
+              socketId: p.socketId,
+              player: p.playerType,
+            })),
+            board: createEmptyBoard(),
+            currentPlayer: 'black',
+            winner: null,
+          });
+        }
+
+        io.to(roomId).emit('roomUpdated', {
+          success: true,
+          room: {
+            id: updatedRoom.id,
+            hostId: updatedRoom.host_id,
+            status: updatedRoom.status,
+            players: updatedRoom.players,
+          },
+        });
+      } else {
+        // 방이 삭제됨
+        io.to(roomId).emit('roomDeleted', { roomId });
+        rooms.delete(roomId);
+      }
+
+      // 공개방 리스트 업데이트
+      io.emit('publicRoomsUpdated', { rooms: getPublicRooms() });
+
+      if (callback) callback({ success: true });
+      console.log(`플레이어 공개방 나감: ${roomId} - ${socket.id}`);
     } catch (error) {
       if (callback) callback({ success: false, error: error.message });
       socket.emit('error', { message: error.message });

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import socketService from '../services/socketService';
 import useMultiplayerStore from '../stores/useMultiplayerStore';
+import { isGuestLoggedIn } from '../utils/guestAuth';
 
 const RoomList = () => {
   const navigate = useNavigate();
@@ -10,6 +11,12 @@ const RoomList = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 게스트 로그인 확인
+    if (!isGuestLoggedIn()) {
+      navigate('/');
+      return;
+    }
+
     // Socket 연결
     if (!isConnected) {
       connect('http://localhost:3001');
@@ -45,7 +52,7 @@ const RoomList = () => {
         socket.off('publicRoomsUpdated');
       }
     };
-  }, [isConnected, connect]);
+  }, [isConnected, connect, navigate]);
 
   const handleCreateRoom = () => {
     const socket = socketService.getSocket();
