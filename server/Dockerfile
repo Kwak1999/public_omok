@@ -1,6 +1,9 @@
 # 백엔드 Dockerfile
 FROM node:18-alpine
 
+# better-sqlite3를 위한 빌드 도구 설치
+RUN apk add --no-cache python3 make g++ sqlite
+
 WORKDIR /app
 
 # package.json과 package-lock.json 복사
@@ -18,7 +21,7 @@ RUN mkdir -p data logs
 # 포트 노출
 EXPOSE 3001
 
-# 환경 변수 기본값 설정
+# 환경 변수 기본값 설정 (docker-compose나 실행 시 덮어쓸 수 있음)
 ENV NODE_ENV=production
 ENV PORT=3001
 ENV CORS_ORIGIN=*
