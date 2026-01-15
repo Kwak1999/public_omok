@@ -1,0 +1,27 @@
+# Node modules
+node_modules
+
+# 로그 파일
+*.log
+logs
+
+# 환경 변수 파일
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 기타
+*.md
+!README.md
