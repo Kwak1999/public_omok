@@ -5,6 +5,8 @@ import useGameStore from '../../stores/useGameStore';
 import useMultiplayerStore from '../../stores/useMultiplayerStore';
 import MultiplayerLobby from './MultiplayerLobby';
 import socketService from '../../services/socketService';
+import { saveGameHistory } from '../../utils/gameHistory';
+import { getGuestId } from '../../utils/guestAuth';
 
 const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = null }) => {
     const { 
@@ -13,11 +15,14 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
         currentPlayer,
         clearSelectedPosition,
         winner,
-        resetGame
+        resetGame,
+        moves,
+        board
     } = useGameStore();
     
-    const { isMultiplayer, myPlayer, gameEndedPlayer, surrender } = useMultiplayerStore();
+    const { isMultiplayer, myPlayer, gameEndedPlayer, surrender, players } = useMultiplayerStore();
     const [showLobby, setShowLobby] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
     
     // 게임이 끝났을 때는 gameEndedPlayer를 사용, 아니면 myPlayer 사용
     const displayPlayer = winner && gameEndedPlayer ? gameEndedPlayer : myPlayer;
@@ -32,9 +37,15 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
     const isPlaying = isPublicRoom && roomData?.status === 'playing';
     
     // 비공개 방에서 게임이 시작되었는지 확인 (보드에 돌이 하나라도 있으면 시작된 것으로 간주)
-    const { board } = useGameStore();
     const hasStonesOnBoard = board.some(row => row.some(cell => cell !== null));
     const isPrivateGameStarted = !isPublicRoom && isMultiplayer && hasStonesOnBoard;
+
+    // 게임 종료 시 저장 상태 초기화
+    React.useEffect(() => {
+        if (!winner) {
+            setIsSaved(false);
+        }
+    }, [winner]);
 
     const handlePlaceStone = () => {
         if (selectedPosition) {
@@ -44,6 +55,38 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
 
     const handleCancel = () => {
         clearSelectedPosition();
+    };
+
+    const handleSaveGame = async () => {
+        const guestId = getGuestId();
+        if (!guestId) {
+            alert('게스트 로그인이 필요합니다.');
+            return;
+        }
+
+        if (!winner || moves.length === 0) {
+            alert('저장할 경기 기록이 없습니다.');
+            return;
+        }
+
+        try {
+            const saved = await saveGameHistory(guestId, {
+                moves,
+                winner,
+                players: isMultiplayer ? (players || []) : [],
+                roomId: isPublicRoom && roomData ? roomData.id : null,
+            });
+
+            if (saved) {
+                setIsSaved(true);
+                alert('경기 기록이 저장되었습니다.');
+            } else {
+                alert('경기 기록 저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('경기 기록 저장 오류:', error);
+            alert('경기 기록 저장에 실패했습니다.');
+        }
     };
 
     return (
@@ -184,35 +227,54 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                         </button>
                     )}
                     {winner ? (
-                        // 게임이 끝났을 때: 공개방이고 방장이면 새 게임 버튼 (ready 상태 확인), 일반 유저는 버튼 없음
-                        isPublicRoom && isHost ? (
-                            <button 
-                                onClick={() => {
-                                    resetGame((response) => {
-                                        if (!response.success) {
-                                            alert('새 게임 시작 실패: ' + response.error);
-                                        }
-                                    });
-                                }}
-                                disabled={!guestReady}
-                                className={`px-6 py-2 rounded-md font-semibold transition ${
-                                    guestReady
-                                        ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                }`}
-                                title={!guestReady ? '참가자가 Ready 상태가 되어야 합니다' : ''}
-                            >
-                                새 게임 시작
-                            </button>
-                        ) : !isPublicRoom ? (
-                            // 공개방이 아닐 때는 기존대로 새 게임 버튼 표시
-                            <button 
-                                onClick={resetGame}
-                                className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition font-semibold"
-                            >
-                                새 게임 시작
-                            </button>
-                        ) : null
+                        <>
+                            {/* 저장하기 버튼 */}
+                            {!isSaved && (
+                                <button
+                                    onClick={handleSaveGame}
+                                    className="px-6 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition font-semibold"
+                                >
+                                    저장하기
+                                </button>
+                            )}
+                            {isSaved && (
+                                <button
+                                    disabled
+                                    className="px-6 py-2 bg-gray-300 text-gray-500 rounded-md cursor-not-allowed font-semibold"
+                                >
+                                    저장됨
+                                </button>
+                            )}
+                            {/* 게임이 끝났을 때: 공개방이고 방장이면 새 게임 버튼 (ready 상태 확인), 일반 유저는 버튼 없음 */}
+                            {isPublicRoom && isHost ? (
+                                <button 
+                                    onClick={() => {
+                                        resetGame((response) => {
+                                            if (!response.success) {
+                                                alert('새 게임 시작 실패: ' + response.error);
+                                            }
+                                        });
+                                    }}
+                                    disabled={!guestReady}
+                                    className={`px-6 py-2 rounded-md font-semibold transition ${
+                                        guestReady
+                                            ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
+                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    }`}
+                                    title={!guestReady ? '참가자가 Ready 상태가 되어야 합니다' : ''}
+                                >
+                                    새 게임 시작
+                                </button>
+                            ) : !isPublicRoom ? (
+                                // 공개방이 아닐 때는 기존대로 새 게임 버튼 표시
+                                <button 
+                                    onClick={resetGame}
+                                    className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition font-semibold"
+                                >
+                                    새 게임 시작
+                                </button>
+                            ) : null}
+                        </>
                     ) : (
                         // 공개방 모드일 때: 게임 시작 전에는 START/Ready 버튼, 게임 중에는 착수 버튼
                         isPublicRoom && roomData && roomData.players.length === 2 ? (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaAlignJustify, FaTimes } from "react-icons/fa";
 import useGameStore from '../stores/useGameStore';
 import useMultiplayerStore from '../stores/useMultiplayerStore';
@@ -7,11 +7,17 @@ import useMultiplayerStore from '../stores/useMultiplayerStore';
 const Navbar = ({darkMode, setDarkMode}) => {
     const [nav, setNav] = useState(false)
     const navigate = useNavigate();
-    const { winner } = useGameStore();
-    const { isMultiplayer } = useMultiplayerStore();
+    const location = useLocation();
+    const { winner, board } = useGameStore();
+    const { isMultiplayer, roomId, roomStatus } = useMultiplayerStore();
     
-    // 게임이 진행 중인지 확인 (멀티플레이어이고 승자가 없을 때)
-    const isGameInProgress = isMultiplayer && !winner;
+    // 게임이 진행 중인지 확인
+    // 1. 멀티플레이어 모드이고
+    // 2. 승자가 없고
+    // 3. (보드에 돌이 하나라도 있거나, 공개방 상태가 'playing'일 때)
+    const hasStonesOnBoard = board.some(row => row.some(cell => cell !== null));
+    const isInPublicRoom = location.pathname.startsWith('/room/');
+    const isGameInProgress = isMultiplayer && !winner && (hasStonesOnBoard || roomStatus === 'playing');
     
     return (
         <nav className='w-screen h-[80px] z-10 bg-zinc-200 fixed drop-shadow-lg dark:bg-neutral-800'>
@@ -40,6 +46,15 @@ const Navbar = ({darkMode, setDarkMode}) => {
                                 onClick={(e) => isGameInProgress && e.preventDefault()}
                             >
                                 공개방
+                            </Link>
+                        </li>
+                        <li className='text-neutral-800 dark:text-gray-300 ml-4'>
+                            <Link 
+                                to="/history" 
+                                className={`hover:text-blue-600 transition ${isGameInProgress ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={(e) => isGameInProgress && e.preventDefault()}
+                            >
+                                경기 기록
                             </Link>
                         </li>
                     </ul>
@@ -112,6 +127,15 @@ const Navbar = ({darkMode, setDarkMode}) => {
                         className={isGameInProgress ? 'cursor-not-allowed' : ''}
                     >
                         공개방
+                    </Link>
+                </li>
+                <li className={`w-full border-b-2 border-zinc-300 text-gray-700 dark:text-gray-300 ${isGameInProgress ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <Link 
+                        onClick={() => !isGameInProgress && setNav(false)} 
+                        to="/history"
+                        className={isGameInProgress ? 'cursor-not-allowed' : ''}
+                    >
+                        경기 기록
                     </Link>
                 </li>
             </ul>

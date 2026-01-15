@@ -16,6 +16,9 @@ const useGameStore = create((set, get) => ({
   // 승자 (null, 'black', 'white')
   winner: null,
   
+  // 착수 기록 (복기용)
+  moves: [], // [{row, col, player, turn}]
+  
   // 선택된 위치 (착수 전 미리보기)
   selectedPosition: null, // { row, col } 또는 null
   
@@ -82,12 +85,22 @@ const useGameStore = create((set, get) => ({
       // 승리 체크
       const isWinner = checkWinner(newBoard, row, col, state.currentPlayer);
       
+      // 착수 기록 추가
+      const newMove = {
+        row,
+        col,
+        player: state.currentPlayer,
+        turn: state.moves.length + 1,
+      };
+      const updatedMoves = [...state.moves, newMove];
+      
       // 승자가 결정되면 게임 종료
       if (isWinner) {
         return {
           board: newBoard,
           winner: state.currentPlayer,
           selectedPosition: null,
+          moves: updatedMoves,
         };
       }
       
@@ -100,6 +113,7 @@ const useGameStore = create((set, get) => ({
         board: newBoard,
         currentPlayer: nextPlayer,
         selectedPosition: null, // 착수 후 선택 해제
+        moves: updatedMoves,
       };
     });
   },
@@ -128,17 +142,39 @@ const useGameStore = create((set, get) => ({
       currentPlayer: PLAYER.BLACK,
       selectedPosition: null,
       winner: null,
+      moves: [],
     });
     if (callback) callback({ success: true });
   },
   
   // 멀티플레이어 상태 동기화 (서버에서 받은 데이터로 업데이트)
-  syncMultiplayerState: (board, currentPlayer, winner) => {
+  syncMultiplayerState: (board, currentPlayer, winner, moves = []) => {
+    // moves가 명시적으로 제공되면 항상 사용 (서버에서 받은 데이터)
+    // 게임 시작 시 (보드가 비어있고 winner가 null)이면 빈 배열로 초기화
+    const isGameStart = board.every(row => row.every(cell => cell === PLAYER.EMPTY)) && 
+                        winner === null && 
+                        currentPlayer === PLAYER.BLACK;
+    
+    // moves 파라미터가 제공되었으면 (undefined가 아니면) 사용
+    // 게임 시작 시에는 빈 배열로 초기화
+    const newMoves = isGameStart ? [] : (moves !== undefined ? moves : get().moves);
+    
     set({
       board,
       currentPlayer,
       winner,
       selectedPosition: null,
+      moves: newMoves,
+    });
+  },
+  
+  // 복기용 보드 상태 설정
+  setReplayState: (board, currentMoveIndex, moves) => {
+    set({
+      board,
+      selectedPosition: null,
+      moves: moves || [],
+      currentMoveIndex: currentMoveIndex || 0,
     });
   },
 }));
