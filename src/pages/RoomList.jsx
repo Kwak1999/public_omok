@@ -62,10 +62,13 @@ const RoomList = () => {
     }
 
     socket.emit('createPublicRoom', (response) => {
-      if (response.success) {
-        navigate(`/room/${response.room.id}`);
+      if (response.success && response.room) {
+        // 방 생성 후 약간의 지연을 두고 이동 (DB 트랜잭션 완료 대기)
+        setTimeout(() => {
+          navigate(`/room/${response.room.id}`);
+        }, 100);
       } else {
-        alert('방 생성 실패: ' + response.error);
+        alert('방 생성 실패: ' + (response.error || '알 수 없는 오류'));
       }
     });
   };

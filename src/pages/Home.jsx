@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Board from "../components/omok/Board.jsx";
 import { loginAsGuest, isGuestLoggedIn, getGuestInfo } from '../utils/guestAuth';
+import useGameStore from '../stores/useGameStore';
+import useMultiplayerStore from '../stores/useMultiplayerStore';
+import { saveGameHistory } from '../utils/gameHistory';
 
 const Home = () => {
     const navigate = useNavigate();
     const [guestId, setGuestId] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const { winner, moves, board } = useGameStore();
+    const { isMultiplayer, players } = useMultiplayerStore();
 
     useEffect(() => {
         // 게스트 로그인 상태 확인
@@ -20,6 +25,8 @@ const Home = () => {
             }
         }
     }, []);
+
+    // 자동 저장은 제거하고 수동 저장 버튼 사용
 
     const handleGuestLogin = () => {
         const id = loginAsGuest();

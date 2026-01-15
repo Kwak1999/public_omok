@@ -15,6 +15,11 @@ import {
   resetAllPlayersReady,
   endGame,
   swapPlayerTypes,
+  saveGameHistory,
+  getGameHistory,
+  getGameById,
+  deleteGameHistory,
+  deleteGameById,
 } from './database.js';
 
 // 데이터베이스 초기화 (서버 재시작 시 초기화)
@@ -42,7 +47,7 @@ const io = new Server(httpServer, {
 });
 
 // 게임 방 관리
-const rooms = new Map(); // roomId -> { players: [], board: [], currentPlayer: 'black', winner: null }
+const rooms = new Map(); // roomId -> { players: [], board: [], currentPlayer: 'black', winner: null, moves: [] }
 
 // 게임 보드 초기화
 const createEmptyBoard = () => {
@@ -295,6 +300,94 @@ app.get('/api/rooms', (req, res) => {
   }
 });
 
+// HTTP API: 경기 기록 저장
+app.post('/api/game-history', (req, res) => {
+  try {
+    const { guestId, roomId, winner, moves, players } = req.body;
+    
+    if (!guestId || !moves || moves.length === 0) {
+      return res.status(400).json({ success: false, error: '필수 데이터가 없습니다.' });
+    }
+    
+    const gameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const gameData = {
+      id: gameId,
+      guestId,
+      roomId: roomId || null,
+      winner: winner || null,
+      moves: moves || [],
+      players: players || [],
+    };
+    
+    saveGameHistory(gameData);
+    res.json({ 
+      success: true, 
+      gameId, 
+      game: {
+        id: gameId,
+        guestId,
+        roomId: roomId || null,
+        winner: winner || null,
+        moves: moves || [],
+        players: players || [],
+        timestamp: Date.now(),
+      }
+    });
+  } catch (error) {
+    console.error('경기 기록 저장 오류:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// HTTP API: 경기 기록 조회 (게스트 ID별)
+app.get('/api/game-history/:guestId', (req, res) => {
+  try {
+    const { guestId } = req.params;
+    const history = getGameHistory(guestId);
+    res.json({ success: true, history });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// HTTP API: 특정 경기 기록 조회
+app.get('/api/game-history/:guestId/:gameId', (req, res) => {
+  try {
+    const { guestId, gameId } = req.params;
+    const game = getGameById(gameId, guestId);
+    
+    if (!game) {
+      return res.status(404).json({ success: false, error: '경기 기록을 찾을 수 없습니다.' });
+    }
+    
+    res.json({ success: true, game });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// HTTP API: 경기 기록 삭제 (게스트 ID별)
+app.delete('/api/game-history/:guestId', (req, res) => {
+  try {
+    const { guestId } = req.params;
+    deleteGameHistory(guestId);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// HTTP API: 특정 경기 기록 삭제
+app.delete('/api/game-history/:guestId/:gameId', (req, res) => {
+  try {
+    const { guestId, gameId } = req.params;
+    deleteGameById(gameId, guestId);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 io.on('connection', (socket) => {
   console.log(`사용자 연결: ${socket.id}`);
 
@@ -314,12 +407,32 @@ io.on('connection', (socket) => {
       const roomId = `room_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const room = createRoom(roomId, socket.id);
       
+      if (!room) {
+        if (callback) callback({ success: false, error: '방 생성에 실패했습니다.' });
+        return;
+      }
+      
       socket.join(roomId);
+      
+      // 게임 방 메모리에 추가 (게임 진행용)
+      if (!rooms.has(roomId)) {
+        rooms.set(roomId, {
+          players: room.players.map(p => ({
+            socketId: p.socketId,
+            player: p.playerType,
+          })),
+          board: createEmptyBoard(),
+          currentPlayer: 'black',
+          winner: null,
+          moves: [],
+        });
+      }
       
       if (callback) callback({ success: true, room });
       io.emit('publicRoomsUpdated', { rooms: getPublicRooms() });
       console.log(`공개방 생성: ${roomId} by ${socket.id}`);
     } catch (error) {
+      console.error('공개방 생성 오류:', error);
       if (callback) callback({ success: false, error: error.message });
     }
   });
@@ -346,6 +459,69 @@ io.on('connection', (socket) => {
     const { roomId } = data;
     
     try {
+      // 먼저 이전 방에서 나가기 처리 (같은 socket이 다른 방에 참가하려 할 때)
+      // 단, 현재 참가하려는 방은 제외
+      const currentRooms = Array.from(rooms.keys());
+      for (const currentRoomId of currentRooms) {
+        // 현재 참가하려는 방이면 건너뛰기
+        if (currentRoomId === roomId) {
+          continue;
+        }
+        
+        const currentRoom = rooms.get(currentRoomId);
+        if (currentRoom && currentRoom.players.some(p => p.socketId === socket.id)) {
+          // 이전 방에서 나가기 처리
+          socket.leave(currentRoomId);
+          const prevRoom = getRoom(currentRoomId);
+          if (prevRoom) {
+            // DB에서 플레이어 제거
+            const updatedPrevRoom = removePlayer(currentRoomId, socket.id);
+            if (updatedPrevRoom) {
+              // 나가는 플레이어를 제외하고 다른 플레이어들에게만 업데이트 전송
+              socket.to(currentRoomId).emit('roomUpdated', {
+                success: true,
+                room: {
+                  id: updatedPrevRoom.id,
+                  hostId: updatedPrevRoom.host_id,
+                  status: updatedPrevRoom.status,
+                  players: updatedPrevRoom.players,
+                },
+              });
+            } else {
+              // 방이 삭제됨 - 나가는 플레이어를 제외하고 전송
+              socket.to(currentRoomId).emit('roomDeleted', { roomId: currentRoomId });
+              rooms.delete(currentRoomId);
+            }
+            io.emit('publicRoomsUpdated', { rooms: getPublicRooms() });
+          }
+          break;
+        }
+      }
+      
+      // 현재 방에 이미 참가한 플레이어인지 확인 (재참가 방지)
+      const currentRoom = getRoom(roomId);
+      if (currentRoom && currentRoom.players.some(p => p.socketId === socket.id)) {
+        // 이미 참가한 플레이어면 그대로 반환
+        socket.join(roomId);
+        
+        // 게임 방 메모리 업데이트
+        if (!rooms.has(roomId)) {
+          rooms.set(roomId, {
+            players: currentRoom.players.map(p => ({
+              socketId: p.socketId,
+              player: p.playerType,
+            })),
+            board: createEmptyBoard(),
+            currentPlayer: 'black',
+            winner: null,
+            moves: [],
+          });
+        }
+        
+        if (callback) callback({ success: true, room: currentRoom });
+        return;
+      }
+      
       const room = joinRoom(roomId, socket.id);
       
       if (!room) {
@@ -356,7 +532,28 @@ io.on('connection', (socket) => {
       socket.join(roomId);
 
       // 게임 방 메모리에 추가 (게임 진행용)
-      if (!rooms.has(roomId)) {
+      // 재입장 시에도 최신 상태로 업데이트
+      if (rooms.has(roomId)) {
+        // 기존 방이 있으면 플레이어 정보만 업데이트
+        // 게임이 진행 중이 아니면 보드도 초기화
+        const gameRoom = rooms.get(roomId);
+        const isGameInProgress = gameRoom.winner === null && 
+                                 gameRoom.board.some(row => row.some(cell => cell !== null));
+        
+        gameRoom.players = room.players.map(p => ({
+          socketId: p.socketId,
+          player: p.playerType, // DB에서 가져온 최신 플레이어 타입 사용
+        }));
+        
+        // 게임이 진행 중이 아니면 보드 초기화 (재입장 시)
+        if (!isGameInProgress && room.status === 'waiting') {
+          gameRoom.board = createEmptyBoard();
+          gameRoom.currentPlayer = 'black';
+          gameRoom.winner = null;
+          gameRoom.moves = [];
+        }
+      } else {
+        // 새 방 생성
         rooms.set(roomId, {
           players: room.players.map(p => ({
             socketId: p.socketId,
@@ -365,6 +562,7 @@ io.on('connection', (socket) => {
           board: createEmptyBoard(),
           currentPlayer: 'black',
           winner: null,
+          moves: [],
         });
       }
 
@@ -404,10 +602,15 @@ io.on('connection', (socket) => {
       // 방에 속한 플레이어인지 확인
       const isMember = room.players.some(p => p.socketId === socket.id);
       if (!isMember) {
-        if (callback) callback({ success: false, error: '방에 참가한 플레이어가 아닙니다.' });
+        // 이미 나간 플레이어이면 성공으로 처리 (중복 호출 방지)
+        if (callback) callback({ success: true });
         return;
       }
 
+      // 나가는 플레이어의 socketId 저장
+      const leavingSocketId = socket.id;
+      
+      // 먼저 socket.leave를 호출하여 이후 이벤트가 이 플레이어에게 전송되지 않도록 함
       socket.leave(roomId);
 
       const updatedRoom = removePlayer(roomId, socket.id);
@@ -426,7 +629,8 @@ io.on('connection', (socket) => {
           });
         }
 
-        io.to(roomId).emit('roomUpdated', {
+        // 나가는 플레이어를 제외하고 방의 다른 플레이어들에게만 업데이트 전송
+        socket.to(roomId).emit('roomUpdated', {
           success: true,
           room: {
             id: updatedRoom.id,
@@ -436,8 +640,8 @@ io.on('connection', (socket) => {
           },
         });
       } else {
-        // 방이 삭제됨
-        io.to(roomId).emit('roomDeleted', { roomId });
+        // 방이 삭제됨 - 나가는 플레이어를 제외하고 전송
+        socket.to(roomId).emit('roomDeleted', { roomId });
         rooms.delete(roomId);
       }
 
@@ -500,16 +704,30 @@ io.on('connection', (socket) => {
 
       const room = startGame(roomId);
       
-      // 게임 방 메모리 초기화
+      // 게임 방 메모리 초기화 또는 생성
       if (rooms.has(roomId)) {
         const gameRoom = rooms.get(roomId);
         gameRoom.board = createEmptyBoard();
         gameRoom.currentPlayer = 'black';
         gameRoom.winner = null;
+        gameRoom.moves = [];
+        // DB에서 최신 플레이어 정보 가져와서 설정 (재입장 시 플레이어 타입이 바뀔 수 있음)
         gameRoom.players = room.players.map(p => ({
           socketId: p.socketId,
-          player: p.playerType,
+          player: p.playerType, // DB에서 가져온 플레이어 타입 사용
         }));
+      } else {
+        // 게임 방이 없으면 새로 생성
+        rooms.set(roomId, {
+          players: room.players.map(p => ({
+            socketId: p.socketId,
+            player: p.playerType,
+          })),
+          board: createEmptyBoard(),
+          currentPlayer: 'black',
+          winner: null,
+          moves: [],
+        });
       }
 
       // 방의 모든 플레이어에게 게임 시작 알림
@@ -523,6 +741,7 @@ io.on('connection', (socket) => {
         },
         board: rooms.get(roomId)?.board || createEmptyBoard(),
         currentPlayer: 'black',
+        moves: [], // 게임 시작 시 moves 초기화
       });
 
       // 공개방 리스트 업데이트
@@ -611,6 +830,18 @@ io.on('connection', (socket) => {
     // 보드 업데이트
     room.board[row][col] = player.player;
 
+    // 착수 기록 추가
+    if (!room.moves) {
+      room.moves = [];
+    }
+    const move = {
+      row,
+      col,
+      player: player.player,
+      turn: room.moves.length + 1,
+    };
+    room.moves.push(move);
+
     // 승리 체크
     const isWinner = checkWinner(room.board, row, col, player.player);
 
@@ -644,6 +875,7 @@ io.on('connection', (socket) => {
         board: room.board,
         winner: room.winner,
         currentPlayer: room.currentPlayer,
+        moves: room.moves,
       });
     } else {
       // 다음 플레이어로 전환
@@ -656,6 +888,7 @@ io.on('connection', (socket) => {
         board: room.board,
         currentPlayer: room.currentPlayer,
         winner: null,
+        moves: room.moves,
       });
     }
 
@@ -718,6 +951,7 @@ io.on('connection', (socket) => {
         board: gameRoom.board,
         winner: gameRoom.winner,
         currentPlayer: gameRoom.currentPlayer,
+        moves: gameRoom.moves || [],
       });
       
       if (callback) callback({ success: true });
@@ -754,6 +988,7 @@ io.on('connection', (socket) => {
       board: room.board,
       winner: room.winner,
       currentPlayer: room.currentPlayer,
+      moves: room.moves || [],
     });
     
     if (callback) callback({ success: true });
@@ -803,6 +1038,7 @@ io.on('connection', (socket) => {
         gameRoom.board = createEmptyBoard();
         gameRoom.currentPlayer = 'black';
         gameRoom.winner = null;
+        gameRoom.moves = [];
         
         // Ready 상태는 초기화하지 않고 바로 게임 시작
         // (이미 Ready 상태이므로 바로 시작 가능)
@@ -845,6 +1081,7 @@ io.on('connection', (socket) => {
           currentPlayer: gameRoom.currentPlayer,
           winner: null,
           players: gameRoom.players, // 교체된 플레이어 정보 전송
+          moves: [], // 게임 리셋 시 moves 초기화
         });
         
         if (callback) callback({ success: true, room: updatedRoom });
@@ -872,12 +1109,14 @@ io.on('connection', (socket) => {
     // 현재 플레이어를 새로운 흑돌 플레이어로 설정
     room.currentPlayer = 'black';
     room.winner = null;
+    room.moves = [];
 
     io.to(roomId).emit('gameReset', {
       board: room.board,
       currentPlayer: room.currentPlayer,
       winner: null,
       players: room.players, // 교체된 플레이어 정보 전송
+      moves: [], // 게임 리셋 시 moves 초기화
     });
 
     if (callback) callback({ success: true });

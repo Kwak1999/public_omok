@@ -42,15 +42,31 @@ export function initDatabase({ resetOnStart = false } = {}) {
     )
   `);
 
+  // 경기 기록 테이블
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS game_history (
+      id TEXT PRIMARY KEY,
+      guest_id TEXT NOT NULL,
+      room_id TEXT,
+      winner TEXT,
+      moves TEXT NOT NULL,
+      players TEXT,
+      created_at INTEGER NOT NULL
+    )
+  `);
+
   // 인덱스 생성
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_rooms_status ON rooms(status);
     CREATE INDEX IF NOT EXISTS idx_players_room ON players(room_id);
+    CREATE INDEX IF NOT EXISTS idx_game_history_guest ON game_history(guest_id);
+    CREATE INDEX IF NOT EXISTS idx_game_history_created ON game_history(created_at);
   `);
 
   if (resetOnStart) {
     db.exec('DELETE FROM players');
     db.exec('DELETE FROM rooms');
+    db.exec('DELETE FROM game_history');
     console.log('🧹 서버 재시작으로 데이터베이스를 초기화했습니다.');
   }
 
@@ -141,11 +157,44 @@ export function joinRoom(roomId, socketId) {
     throw new Error('방이 가득 찼습니다.');
   }
 
-  // 플레이어 추가
-  db.prepare(`
-    INSERT INTO players (room_id, socket_id, player_type, is_ready, joined_at)
-    VALUES (?, ?, 'white', 0, ?)
-  `).run(roomId, socketId, Date.now());
+  // 플레이어 타입 결정: 방장은 항상 'black', 두 번째 플레이어는 항상 'white'
+  const isHost = room.host_socket_id === socketId;
+  
+  if (isHost) {
+    // 방장은 항상 black
+    // 기존 플레이어가 있다면 그 플레이어가 white인지 확인
+    if (room.players.length === 1) {
+      const existingPlayer = room.players[0];
+      // 기존 플레이어가 black이면 white로 변경 (방장이 black이어야 하므로)
+      if (existingPlayer.playerType === 'black') {
+        db.prepare(`
+          UPDATE players SET player_type = 'white' WHERE room_id = ? AND socket_id = ?
+        `).run(roomId, existingPlayer.socketId);
+      }
+    }
+    // 방장 추가 (항상 black)
+    db.prepare(`
+      INSERT INTO players (room_id, socket_id, player_type, is_ready, joined_at)
+      VALUES (?, ?, 'black', 0, ?)
+    `).run(roomId, socketId, Date.now());
+  } else {
+    // 두 번째 플레이어는 항상 white
+    // 기존 플레이어(방장)가 black인지 확인하고, 아니면 black으로 변경
+    if (room.players.length === 1) {
+      const existingPlayer = room.players[0];
+      // 기존 플레이어가 white이면 black으로 변경 (방장이 black이어야 하므로)
+      if (existingPlayer.playerType === 'white') {
+        db.prepare(`
+          UPDATE players SET player_type = 'black' WHERE room_id = ? AND socket_id = ?
+        `).run(roomId, existingPlayer.socketId);
+      }
+    }
+    // 두 번째 플레이어 추가 (항상 white)
+    db.prepare(`
+      INSERT INTO players (room_id, socket_id, player_type, is_ready, joined_at)
+      VALUES (?, ?, 'white', 0, ?)
+    `).run(roomId, socketId, Date.now());
+  }
 
   return getRoom(roomId);
 }
@@ -221,6 +270,22 @@ export function removePlayer(roomId, socketId) {
       db.prepare(`
         UPDATE rooms SET host_id = ?, host_socket_id = ? WHERE id = ?
       `).run(newHostSocketId, newHostSocketId, roomId);
+      
+      // 새 방장은 항상 black이어야 함
+      db.prepare(`
+        UPDATE players SET player_type = 'black' WHERE room_id = ? AND socket_id = ?
+      `).run(roomId, newHostSocketId);
+      
+      // 다른 플레이어가 있다면 white로 변경
+      const otherPlayer = roomAfter.players.find(p => p.socketId !== newHostSocketId);
+      if (otherPlayer) {
+        db.prepare(`
+          UPDATE players SET player_type = 'white' WHERE room_id = ? AND socket_id = ?
+        `).run(roomId, otherPlayer.socketId);
+      }
+      
+      // 플레이어 타입 업데이트 후 최신 상태 가져오기
+      roomAfter = getRoom(roomId);
     }
   }
 
@@ -286,6 +351,76 @@ export function endGame(roomId) {
   resetAllPlayersReady(roomId);
   
   return getRoom(roomId);
+}
+
+// 경기 기록 저장
+export function saveGameHistory(gameData) {
+  const { id, guestId, roomId, winner, moves, players } = gameData;
+  
+  db.prepare(`
+    INSERT INTO game_history (id, guest_id, room_id, winner, moves, players, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    guestId,
+    roomId || null,
+    winner || null,
+    JSON.stringify(moves || []),
+    JSON.stringify(players || []),
+    Date.now()
+  );
+  
+  return id;
+}
+
+// 경기 기록 조회 (게스트 ID별)
+export function getGameHistory(guestId) {
+  const games = db.prepare(`
+    SELECT * FROM game_history 
+    WHERE guest_id = ? 
+    ORDER BY created_at DESC
+    LIMIT 100
+  `).all(guestId);
+  
+  return games.map(game => ({
+    id: game.id,
+    guestId: game.guest_id,
+    roomId: game.room_id,
+    winner: game.winner,
+    moves: JSON.parse(game.moves || '[]'),
+    players: JSON.parse(game.players || '[]'),
+    timestamp: game.created_at,
+  }));
+}
+
+// 특정 경기 기록 조회
+export function getGameById(gameId, guestId) {
+  const game = db.prepare(`
+    SELECT * FROM game_history 
+    WHERE id = ? AND guest_id = ?
+  `).get(gameId, guestId);
+  
+  if (!game) return null;
+  
+  return {
+    id: game.id,
+    guestId: game.guest_id,
+    roomId: game.room_id,
+    winner: game.winner,
+    moves: JSON.parse(game.moves || '[]'),
+    players: JSON.parse(game.players || '[]'),
+    timestamp: game.created_at,
+  };
+}
+
+// 경기 기록 삭제 (게스트 ID별)
+export function deleteGameHistory(guestId) {
+  db.prepare('DELETE FROM game_history WHERE guest_id = ?').run(guestId);
+}
+
+// 특정 경기 기록 삭제
+export function deleteGameById(gameId, guestId) {
+  db.prepare('DELETE FROM game_history WHERE id = ? AND guest_id = ?').run(gameId, guestId);
 }
 
 // 데이터베이스 연결 종료

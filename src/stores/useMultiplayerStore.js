@@ -4,14 +4,15 @@ import useGameStore from './useGameStore';
 
 const useMultiplayerStore = create((set, get) => {
   // 게임 스토어와 동기화하는 헬퍼 함수
-  const syncGameStore = (board, currentPlayer, winner) => {
-    useGameStore.getState().syncMultiplayerState(board, currentPlayer, winner);
+  const syncGameStore = (board, currentPlayer, winner, moves = []) => {
+    useGameStore.getState().syncMultiplayerState(board, currentPlayer, winner, moves);
   };
 
   return {
     // 멀티플레이어 상태
     isMultiplayer: false,
     roomId: null,
+    roomStatus: null, // 'waiting' 또는 'playing' (공개방 상태)
     myPlayer: null, // 'black' 또는 'white'
     gameEndedPlayer: null, // 게임이 끝났을 때의 내 플레이어 색 (게임 리셋 전까지 유지)
     players: [], // [{ id, socketId, player }]
@@ -22,8 +23,8 @@ const useMultiplayerStore = create((set, get) => {
       const socket = socketService.connect(serverUrl);
 
       socketService.onStonePlaced((data) => {
-        const { board, currentPlayer, winner } = data;
-        syncGameStore(board, currentPlayer, winner);
+        const { board, currentPlayer, winner, moves } = data;
+        syncGameStore(board, currentPlayer, winner, moves);
         
         // 게임이 끝났을 때 현재 플레이어 색을 저장 (게임 리셋 전까지 유지)
         if (winner && !get().gameEndedPlayer) {
@@ -33,7 +34,7 @@ const useMultiplayerStore = create((set, get) => {
       });
 
       socketService.onGameReset((data) => {
-        const { board, currentPlayer, winner, players } = data;
+        const { board, currentPlayer, winner, players, moves } = data;
         
         // 플레이어 포지션이 교체되었으므로 업데이트
         if (players) {
@@ -48,13 +49,13 @@ const useMultiplayerStore = create((set, get) => {
           });
         }
         
-        syncGameStore(board, currentPlayer, winner);
+        syncGameStore(board, currentPlayer, winner, moves || []);
       });
 
       socketService.onPlayerJoined((data) => {
-        const { players, board, currentPlayer } = data;
+        const { players, board, currentPlayer, moves } = data;
         set({ players });
-        syncGameStore(board, currentPlayer, null);
+        syncGameStore(board, currentPlayer, null, moves || []);
       });
 
       socketService.onPlayerLeft((data) => {
