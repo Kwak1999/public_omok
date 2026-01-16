@@ -444,3 +444,7 @@ EC2 배포 시 자동 백업 스크립트 예시는 [server/EC2_DEPLOY.md](./ser
 ---
 
 **즐거운 게임 되세요! 🎮**
+=======
+npm install -D tailwindcss@3 postcss autoprefixer
+npx tailwindcss init -p
+npm install react-icons
