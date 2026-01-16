@@ -90,12 +90,17 @@ docker logs -f omok-backend
 ### 6. 서버 헬스 체크
 
 ```bash
-# 로컬에서 확인
+# EC2 내부에서 확인 (로컬)
 curl http://localhost:3001/api/rooms
 
 # 외부에서 확인 (EC2 퍼블릭 IP 사용)
+# 예: curl http://3.36.70.5:3001/api/rooms
 curl http://your-ec2-ip:3001/api/rooms
 ```
+
+> ⚠️ **주의**: `strategia-mok.store`는 프론트엔드 도메인(CloudFront)이므로 백엔드 API 테스트에는 사용할 수 없습니다. EC2 퍼블릭 IP를 사용하세요.
+
+자세한 테스트 방법은 [TEST_DEPLOY.md](./TEST_DEPLOY.md)를 참고하세요.
 
 ### 7. 자동 재시작 설정
 
