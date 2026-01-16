@@ -1217,7 +1217,6 @@ io.on('connection', (socket) => {
 
 // 환경 변수 설정
 const PORT = process.env.PORT || 3001;
-const NODE_ENV = process.env.NODE_ENV || 'development';
 const corsOrigin = getCorsOrigin();
 
 // 프로덕션 환경 경고
