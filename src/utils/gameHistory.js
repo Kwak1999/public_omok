@@ -3,7 +3,11 @@
  * 게스트 ID별로 경기 기록을 저장하고 관리합니다.
  */
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
+
+if (!SERVER_URL) {
+  console.error('VITE_SERVER_URL 환경 변수가 설정되지 않았습니다.');
+}
 
 /**
  * 경기 기록 저장 (서버에 저장)
