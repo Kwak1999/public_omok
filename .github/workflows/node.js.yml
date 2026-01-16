@@ -27,7 +27,7 @@ jobs:
         cache: 'npm'
 
     - run: npm i
-    - run: npm run build --if-present
+    - run: VITE_SERVER_URL=${{ secrets.VITE_SERVER_URL }} npm run build
 
     # [중요] AWS 자격 증명 설정: 'with' 안에 정확한 파라미터만 넣어야 합니다.
     - name: Configure AWS credentials
