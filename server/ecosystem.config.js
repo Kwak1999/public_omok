@@ -14,8 +14,8 @@ module.exports = {
     },
     env_production: {
       NODE_ENV: 'production',
-      PORT: 3001,
-      CORS_ORIGIN: 'https://yourdomain.com'
+      PORT: process.env.PORT || 3001,
+      CORS_ORIGIN: process.env.CORS_ORIGIN || '*'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',

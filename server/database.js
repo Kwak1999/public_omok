@@ -23,11 +23,19 @@ export function initDatabase({ resetOnStart = false } = {}) {
       id TEXT PRIMARY KEY,
       host_id TEXT NOT NULL,
       host_socket_id TEXT NOT NULL,
+      title TEXT,
       status TEXT NOT NULL DEFAULT 'waiting',
       created_at INTEGER NOT NULL,
       started_at INTEGER
     )
   `);
+  
+  // 기존 테이블에 title 컬럼 추가 (마이그레이션)
+  try {
+    db.exec(`ALTER TABLE rooms ADD COLUMN title TEXT`);
+  } catch (e) {
+    // 컬럼이 이미 존재하는 경우 무시
+  }
 
   // 플레이어 테이블
   db.exec(`
@@ -74,15 +82,15 @@ export function initDatabase({ resetOnStart = false } = {}) {
 }
 
 // 방 생성
-export function createRoom(roomId, hostSocketId) {
+export function createRoom(roomId, hostSocketId, title = null) {
   const now = Date.now();
   
   db.transaction(() => {
     // 방 생성
     db.prepare(`
-      INSERT INTO rooms (id, host_id, host_socket_id, status, created_at)
-      VALUES (?, ?, ?, 'waiting', ?)
-    `).run(roomId, hostSocketId, hostSocketId, now);
+      INSERT INTO rooms (id, host_id, host_socket_id, title, status, created_at)
+      VALUES (?, ?, ?, ?, 'waiting', ?)
+    `).run(roomId, hostSocketId, hostSocketId, title || null, now);
 
     // 호스트를 플레이어로 추가
     db.prepare(`
@@ -129,6 +137,7 @@ export function getPublicRooms() {
   return rooms.map(room => ({
     id: room.id,
     hostId: room.host_id,
+    title: room.title || null,
     status: room.status,
     playerCount: room.player_count,
     createdAt: room.created_at,

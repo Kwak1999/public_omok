@@ -31,7 +31,13 @@ const PublicRoom = () => {
 
     // Socket 연결
     if (!isConnected) {
-      connect('http://localhost:3001');
+      const serverUrl = import.meta.env.VITE_SERVER_URL;
+      if (serverUrl) {
+        connect(serverUrl);
+      } else {
+        setError('서버 URL이 설정되지 않았습니다.');
+        return;
+      }
     }
 
     const socket = socketService.getSocket();
@@ -297,10 +303,11 @@ const PublicRoom = () => {
             </button>
             <div>
               <div className="font-semibold text-neutral-700 dark:text-gray-300">
-                방 ID: {room.id.substring(0, 12)}...
+                {room.title || `방 ID: ${room.id.substring(0, 12)}...`}
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                플레이어: {room.players.length}/2
+                {room.title && <span className="text-xs">({room.id.substring(0, 8)}...)</span>}
+                <span className={room.title ? 'ml-2' : ''}>플레이어: {room.players.length}/2</span>
               </div>
             </div>
           </div>

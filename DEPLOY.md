@@ -322,18 +322,63 @@ sudo certbot renew --dry-run
 
 ## 환경 변수 설정
 
-### 백엔드 (.env)
+### 백엔드 환경 변수
+
+`server/.env` 파일 생성 (또는 환경 변수로 설정):
 
 ```bash
-PORT=3001
+# Node.js 환경
 NODE_ENV=production
+
+# 서버 포트
+PORT=3001
+
+# CORS 허용 오리진 (쉼표로 구분)
+# 예: CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
+# 모든 오리진 허용: CORS_ORIGIN=*
 CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
+
+# 데이터베이스 초기화 설정 (선택사항)
+# false: 서버 재시작 시 데이터 유지 (기본값: true - 항상 초기화)
+# RESET_DB_ON_START=false
 ```
 
-### 프론트엔드 (빌드 시)
+### 프론트엔드 환경 변수
+
+빌드 시 환경 변수 설정:
 
 ```bash
+# 개발 환경
+VITE_SERVER_URL=http://localhost:3001
+
+# 프로덕션 환경
 VITE_SERVER_URL=https://api.yourdomain.com
+# 또는 EC2 사용 시
+VITE_SERVER_URL=http://your-ec2-ip:3001
+```
+
+빌드 명령어:
+```bash
+VITE_SERVER_URL=https://api.yourdomain.com npm run build
+```
+
+### Docker Compose 환경 변수
+
+`docker-compose.yml` 사용 시 환경 변수 설정:
+
+```bash
+# .env 파일 생성 (프로젝트 루트)
+PORT=3001
+CORS_ORIGIN=https://yourdomain.com
+VITE_SERVER_URL=https://api.yourdomain.com
+```
+
+또는 환경 변수 직접 설정:
+```bash
+export PORT=3001
+export CORS_ORIGIN=https://yourdomain.com
+export VITE_SERVER_URL=https://api.yourdomain.com
+docker-compose up -d
 ```
 
 ---
@@ -538,6 +583,22 @@ cp server/data/omok.db server/data/omok.db.backup
 
 ---
 
+## EC2 배포 가이드
+
+AWS EC2 인스턴스에 백엔드를 배포하는 상세한 가이드는 별도 문서를 참조하세요:
+
+👉 **[server/EC2_DEPLOY.md](./server/EC2_DEPLOY.md)**
+
+이 가이드에는 다음 내용이 포함되어 있습니다:
+- EC2 인스턴스 설정 및 보안 그룹 구성
+- 데이터베이스 관리 및 백업 전략 (SQLite)
+- PM2/systemd를 사용한 프로세스 관리
+- Nginx 리버스 프록시 설정
+- SSL 인증서 설정 (Let's Encrypt)
+- 모니터링 및 문제 해결
+
+---
+
 ## 보안 권장사항
 
 1. **환경 변수 사용**: 민감한 정보는 환경 변수로 관리
@@ -546,6 +607,7 @@ cp server/data/omok.db server/data/omok.db.backup
 4. **방화벽 설정**: 필요한 포트만 열기
 5. **정기 업데이트**: Node.js 및 패키지 정기 업데이트
 6. **로그 모니터링**: 의심스러운 활동 감지
+7. **데이터베이스 백업**: 정기적인 백업 및 복원 계획 수립 (EC2 배포 시 필수)
 
 ---
 
