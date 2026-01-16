@@ -2,6 +2,8 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import {
   initDatabase,
   createRoom,
@@ -30,6 +32,33 @@ initDatabase({ resetOnStart });
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// 정적 파일 서빙 설정 (프로덕션 환경)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// 프로덕션 환경에서 프론트엔드 빌드 파일 서빙
+if (NODE_ENV === 'production') {
+  // dist 폴더 경로 (server 폴더의 상위 디렉토리의 dist)
+  const distPath = join(__dirname, '..', 'dist');
+  
+  // 정적 파일 서빙 (assets, vite.svg 등)
+  app.use(express.static(distPath, {
+    maxAge: '1y', // 캐시 설정
+    etag: true,
+  }));
+  
+  // SPA 라우팅을 위한 fallback: API가 아닌 모든 GET 요청은 index.html로
+  app.get('*', (req, res, next) => {
+    // API 경로는 제외
+    if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+      return next();
+    }
+    // 그 외 모든 요청은 index.html로
+    res.sendFile(join(distPath, 'index.html'));
+  });
+}
 
 const httpServer = createServer(app);
 

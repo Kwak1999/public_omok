@@ -317,22 +317,25 @@ docker-compose up -d
 
 자세한 내용은 [DOCKER.md](./DOCKER.md)를 참고하세요.
 
-#### 수동 배포
+#### 수동 배포 (단일 서버)
 
-**백엔드:**
+프로덕션 모드에서는 **단일 서버로 프론트엔드와 백엔드를 모두 서빙**합니다:
+
 ```bash
+# 1. 프론트엔드 빌드
+npm install
+npm run build
+
+# 2. 백엔드 의존성 설치 및 실행
 cd server
 npm install --production
-pm2 start ecosystem.config.js --env production
+NODE_ENV=production pm2 start ecosystem.config.js --env production
 ```
 
-**프론트엔드:**
-```bash
-npm install
-
-VITE_SERVER_URL=https://api.yourdomain.com npm run build
-# dist/ 디렉토리를 웹 서버에 배포
-```
+> **중요**: 
+> - 프로덕션 모드(`NODE_ENV=production`)에서는 서버가 자동으로 `dist/` 폴더의 정적 파일을 서빙합니다.
+> - 프론트엔드와 백엔드가 같은 서버에서 서빙되므로 별도의 프론트엔드 서버가 필요하지 않습니다.
+> - `VITE_SERVER_URL` 환경 변수 설정이 필요 없습니다 (상대 경로 사용).
 
 #### EC2 배포
 
@@ -366,7 +369,31 @@ EC2 배포 시 자동 백업 스크립트 예시는 [server/EC2_DEPLOY.md](./ser
 2. 포트 3001이 사용 가능한지 확인
 3. 방화벽 설정 확인
 4. 브라우저 콘솔에서 오류 확인
-5. 환경 변수 `VITE_SERVER_URL`이 올바르게 설정되었는지 확인
+5. 프로덕션 모드에서는 `VITE_SERVER_URL` 설정이 필요 없습니다 (같은 서버에서 서빙)
+
+### 정적 파일이 로드되지 않을 때 (404 오류)
+
+프론트엔드 파일(`index-*.js` 등)을 찾을 수 없다는 오류가 발생하는 경우:
+
+1. **프론트엔드 빌드 확인**: `dist/` 폴더가 존재하는지 확인
+   ```bash
+   ls -la dist/
+   ```
+
+2. **프로덕션 모드 확인**: `NODE_ENV=production`이 설정되어 있는지 확인
+   ```bash
+   echo $NODE_ENV
+   ```
+
+3. **빌드 재실행**: 프론트엔드를 다시 빌드
+   ```bash
+   npm run build
+   ```
+
+4. **서버 재시작**: 변경사항 적용을 위해 서버 재시작
+   ```bash
+   pm2 restart omok-server
+   ```
 
 ### 게임이 동기화되지 않음
 
