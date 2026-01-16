@@ -273,9 +273,15 @@ npm run lint
 
 #### 프론트엔드
 
-`.env` 파일 생성 (선택사항):
+`.env` 파일 생성 (개발 환경):
 ```env
 VITE_SERVER_URL=http://localhost:3001
+```
+
+`.env.production` 파일 생성 (프로덕션 빌드):
+```env
+# 백엔드 서버 주소로 변경하세요
+VITE_SERVER_URL=https://api.strategia-mok.store
 ```
 
 #### 백엔드
@@ -284,7 +290,7 @@ VITE_SERVER_URL=http://localhost:3001
 ```env
 NODE_ENV=production
 PORT=3001
-CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
+CORS_ORIGIN=https://strategia-mok.store,https://www.strategia-mok.store
 
 # 데이터베이스 초기화 설정 (선택사항)
 # false: 서버 재시작 시 데이터 유지 (기본값: true - 항상 초기화)
@@ -329,7 +335,9 @@ VITE_SERVER_URL=https://api.yourdomain.com npm run build
 
 #### EC2 배포
 
-AWS EC2에 배포하는 경우, 상세한 가이드는 [server/EC2_DEPLOY.md](./server/EC2_DEPLOY.md)를 참고하세요.
+AWS EC2에 배포하는 경우:
+- **Docker 사용**: [server/DOCKER_DEPLOY.md](./server/DOCKER_DEPLOY.md) 참고
+- **PM2/systemd 사용**: [server/EC2_DEPLOY.md](./server/EC2_DEPLOY.md) 참고
 
 ## 🗄️ 데이터베이스
 

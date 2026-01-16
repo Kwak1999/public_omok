@@ -63,9 +63,11 @@ npm install --production
 cat > .env << EOF
 PORT=3001
 NODE_ENV=production
-CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
+CORS_ORIGIN=https://strategia-mok.store,https://www.strategia-mok.store
 EOF
 ```
+
+> **🐳 Docker 사용**: EC2에서 Docker를 사용하는 경우 [server/DOCKER_DEPLOY.md](./server/DOCKER_DEPLOY.md)를 참고하세요.
 
 ### 4. 서버 실행 방법
 
@@ -334,9 +336,9 @@ NODE_ENV=production
 PORT=3001
 
 # CORS 허용 오리진 (쉼표로 구분)
-# 예: CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
+# 예: CORS_ORIGIN=https://strategia-mok.store,https://www.strategia-mok.store
 # 모든 오리진 허용: CORS_ORIGIN=*
-CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
+CORS_ORIGIN=https://strategia-mok.store,https://www.strategia-mok.store
 
 # 데이터베이스 초기화 설정 (선택사항)
 # false: 서버 재시작 시 데이터 유지 (기본값: true - 항상 초기화)
@@ -352,14 +354,20 @@ CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
 VITE_SERVER_URL=http://localhost:3001
 
 # 프로덕션 환경
-VITE_SERVER_URL=https://api.yourdomain.com
+# 백엔드 서버 주소로 변경하세요
+VITE_SERVER_URL=https://api.strategia-mok.store
 # 또는 EC2 사용 시
-VITE_SERVER_URL=http://your-ec2-ip:3001
+# VITE_SERVER_URL=http://your-ec2-ip:3001
 ```
 
 빌드 명령어:
 ```bash
-VITE_SERVER_URL=https://api.yourdomain.com npm run build
+# 프로덕션 빌드 (백엔드 서버 주소로 변경)
+VITE_SERVER_URL=https://api.strategia-mok.store npm run build
+
+# 또는 .env.production 파일 사용
+# .env.production 파일에 VITE_SERVER_URL 설정 후
+npm run build
 ```
 
 ### Docker Compose 환경 변수
