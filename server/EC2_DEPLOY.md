@@ -420,23 +420,47 @@ sudo ufw status
 
 ### 8.2 Nginx 리버스 프록시 설정 (권장)
 
-Nginx를 사용하여 HTTPS를 적용하고 포트를 숨길 수 있습니다:
+Nginx를 사용하면 성능 향상, HTTPS 지원, 포트 숨김 등의 이점이 있습니다:
+
+#### Nginx 설치
 
 ```bash
 # Nginx 설치
-sudo apt-get install nginx
+sudo apt-get update
+sudo apt-get install nginx -y
 
-# 설정 파일 생성
-sudo nano /etc/nginx/sites-available/omok-backend
+# Nginx 상태 확인
+sudo systemctl status nginx
 ```
 
-설정 파일 내용:
+#### 설정 파일 생성
+
+프로젝트에 포함된 설정 파일을 사용하거나 직접 생성:
+
+```bash
+# 프로젝트의 설정 파일 복사
+cd ~/public_omok/server
+sudo cp nginx-omok.conf /etc/nginx/sites-available/omok
+
+# 또는 직접 생성
+sudo nano /etc/nginx/sites-available/omok
+```
+
+설정 파일 내용 (프로젝트의 `server/nginx-omok.conf` 참고):
 ```nginx
 server {
     listen 80;
-    server_name api.yourdomain.com;
+    server_name your-domain.com www.your-domain.com;  # 도메인으로 변경
 
-    location / {
+    # 정적 파일 직접 서빙 (성능 최적화)
+    location /assets/ {
+        alias /home/ubuntu/public_omok/dist/assets/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # API 요청은 Express 서버로 프록시
+    location /api/ {
         proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -445,11 +469,10 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
     }
 
-    # WebSocket 지원
-    location /socket.io {
+    # WebSocket (Socket.io) 프록시
+    location /socket.io/ {
         proxy_pass http://localhost:3001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -458,15 +481,56 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
+
+    # 프론트엔드 정적 파일 서빙
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
 }
 ```
 
-심볼릭 링크 생성 및 활성화:
+#### 설정 활성화
+
 ```bash
-sudo ln -s /etc/nginx/sites-available/omok-backend /etc/nginx/sites-enabled/
+# 심볼릭 링크 생성
+sudo ln -s /etc/nginx/sites-available/omok /etc/nginx/sites-enabled/
+
+# 기본 설정 비활성화 (선택사항)
+sudo rm /etc/nginx/sites-enabled/default
+
+# 설정 파일 문법 검사
 sudo nginx -t
+
+# Nginx 재시작
 sudo systemctl restart nginx
+
+# Nginx 상태 확인
+sudo systemctl status nginx
 ```
+
+#### 방화벽 설정 업데이트
+
+Nginx를 사용하면 포트 80/443만 열면 됩니다:
+
+```bash
+# 기존 3001 포트 규칙 제거 (선택사항)
+sudo ufw delete allow 3001/tcp
+
+# HTTP/HTTPS 포트 열기
+sudo ufw allow 'Nginx Full'
+# 또는
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# 방화벽 상태 확인
+sudo ufw status
+```
+
+> **참고**: Nginx를 사용하면 Express 서버는 `localhost:3001`에서만 실행되므로 보안이 향상됩니다.
 
 ### 8.3 SSL 인증서 설정 (Let's Encrypt)
 
