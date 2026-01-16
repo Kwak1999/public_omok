@@ -64,9 +64,14 @@ sudo apt-get install git
 # 프로젝트 클론
 cd ~
 git clone <your-repo-url> public_omok
-cd public_omok/server
+cd public_omok
 
-# 의존성 설치
+# 프론트엔드 빌드
+npm install
+npm run build
+
+# 백엔드 의존성 설치
+cd server
 npm install --production
 ```
 
@@ -74,14 +79,25 @@ npm install --production
 
 로컬에서:
 ```bash
-scp -i your-key.pem -r server/ ubuntu@your-ec2-ip:~/
+# 전체 프로젝트 업로드 (프론트엔드 빌드 포함)
+scp -i your-key.pem -r public_omok/ ubuntu@your-ec2-ip:~/
 ```
 
 EC2에서:
 ```bash
-cd ~/server
+cd ~/public_omok
+
+# 프론트엔드 빌드 (아직 빌드하지 않은 경우)
+npm install
+npm run build
+
+# 백엔드 의존성 설치
+cd server
 npm install --production
 ```
+
+> **중요**: 프로덕션 모드에서는 서버가 자동으로 `dist/` 폴더의 프론트엔드 빌드 파일을 서빙합니다.
+> 따라서 프론트엔드를 먼저 빌드해야 합니다.
 
 ## 🗄️ 3. 데이터베이스 설정
 
@@ -187,6 +203,22 @@ cat .env
 
 ## 🚀 5. 서버 실행
 
+### 5.0 프론트엔드 빌드 확인
+
+서버 실행 전에 프론트엔드가 빌드되었는지 확인:
+
+```bash
+cd ~/public_omok
+ls -la dist/
+```
+
+`dist/` 폴더가 없거나 비어있다면 빌드를 실행:
+
+```bash
+npm install
+npm run build
+```
+
 ### 5.1 PM2를 사용한 실행 (권장)
 
 #### PM2 설정 파일 사용
@@ -197,6 +229,10 @@ cat .env
 cd ~/public_omok/server
 pm2 start ecosystem.config.cjs --env production
 ```
+
+> **참고**: 프로덕션 모드(`NODE_ENV=production`)에서는 서버가 자동으로 `../dist/` 폴더의 정적 파일을 서빙합니다.
+> - API 요청(`/api/*`)과 WebSocket(`/socket.io/*`)은 정상적으로 처리됩니다.
+> - 그 외 모든 요청은 `index.html`로 리다이렉트되어 SPA 라우팅이 작동합니다.
 
 #### PM2 명령어로 직접 실행
 
@@ -327,13 +363,23 @@ curl http://your-ec2-ip:3001/api/rooms
 
 ```bash
 # Git 사용 시
-cd ~/server
+cd ~/public_omok
+
+# 프론트엔드 업데이트 및 빌드
 git pull
+npm install
+npm run build
+
+# 백엔드 업데이트
+cd server
 npm install --production
 pm2 restart omok-backend
 
 # 또는 SCP 사용 시
 # 로컬에서 파일 업로드 후
+cd ~/public_omok
+npm run build
+cd server
 pm2 restart omok-backend
 ```
 
@@ -344,11 +390,18 @@ pm2 restart omok-backend
 ~/backup-db.sh
 
 # 2. 코드 업데이트
-cd ~/server
+cd ~/public_omok
 git pull
+
+# 3. 프론트엔드 빌드
+npm install
+npm run build
+
+# 4. 백엔드 업데이트
+cd server
 npm install --production
 
-# 3. 서버 재시작
+# 5. 서버 재시작
 pm2 restart omok-backend
 ```
 
@@ -504,7 +557,7 @@ aws s3 cp "$BACKUP_DIR/omok_${DATE}.db" s3://your-bucket/db-backups/omok_${DATE}
 # 로그 확인
 pm2 logs omok-backend
 # 또는
-tail -f ~/server/logs/error.log
+tail -f ~/public_omok/server/logs/error.log
 
 # 포트 사용 확인
 sudo netstat -tulpn | grep 3001
@@ -515,7 +568,48 @@ sudo lsof -i :3001
 sudo kill -9 <PID>
 ```
 
-### 10.2 데이터베이스 권한 문제
+### 10.2 정적 파일이 로드되지 않을 때 (404 오류)
+
+프론트엔드 파일(`index-BkWSSbE1.js` 등)을 찾을 수 없다는 오류가 발생하는 경우:
+
+1. **프론트엔드 빌드 확인**
+   ```bash
+   cd ~/public_omok
+   ls -la dist/
+   ```
+   `dist/` 폴더가 없거나 비어있다면 빌드를 실행:
+   ```bash
+   npm install
+   npm run build
+   ```
+
+2. **프로덕션 모드 확인**
+   ```bash
+   # PM2 환경 변수 확인
+   pm2 env omok-backend | grep NODE_ENV
+   ```
+   `NODE_ENV=production`이 설정되어 있어야 합니다.
+
+3. **프로젝트 구조 확인**
+   ```bash
+   cd ~/public_omok
+   ls -la
+   ```
+   다음과 같은 구조여야 합니다:
+   ```
+   public_omok/
+   ├── dist/          # 프론트엔드 빌드 결과물
+   ├── server/        # 백엔드 서버
+   └── ...
+   ```
+
+4. **서버 재시작**
+   ```bash
+   pm2 restart omok-backend
+   pm2 logs omok-backend
+   ```
+
+### 10.3 데이터베이스 권한 문제
 
 ```bash
 # 권한 확인
@@ -526,7 +620,7 @@ chmod 644 ~/server/data/omok.db
 chown ubuntu:ubuntu ~/server/data/omok.db
 ```
 
-### 10.3 메모리 부족
+### 10.4 메모리 부족
 
 ```bash
 # 메모리 사용량 확인
@@ -537,7 +631,7 @@ pm2 monit
 pm2 start server.js --max-memory-restart 500M
 ```
 
-### 10.4 연결 문제
+### 10.5 연결 문제
 
 ```bash
 # 방화벽 확인
@@ -557,10 +651,13 @@ pm2 logs omok-backend --lines 100
 - [ ] EC2 보안 그룹에서 포트 3001 열림
 - [ ] Node.js 18 이상 설치됨
 - [ ] PM2 설치 및 설정됨
-- [ ] 환경 변수 설정 완료 (CORS_ORIGIN 등)
+- [ ] 프론트엔드 빌드 완료 (`dist/` 폴더 존재 확인)
+- [ ] 백엔드 의존성 설치 완료 (`npm install --production`)
+- [ ] 환경 변수 설정 완료 (`NODE_ENV=production`, `CORS_ORIGIN` 등)
 - [ ] 데이터베이스 디렉토리 생성 및 권한 설정
 - [ ] 백업 스크립트 설정 및 테스트
 - [ ] 서버 실행 및 헬스 체크 통과
+- [ ] 브라우저에서 사이트 접속 테스트 (정적 파일 로드 확인)
 - [ ] PM2 자동 시작 설정 완료
 - [ ] 방화벽 설정 완료
 - [ ] (선택) Nginx 리버스 프록시 설정
@@ -575,4 +672,24 @@ pm2 logs omok-backend --lines 100
 
 ---
 
-**배포 완료 후 프론트엔드의 `VITE_SERVER_URL` 환경 변수를 EC2 서버 주소로 설정하세요!**
+## 📌 중요 사항
+
+### 프론트엔드와 백엔드 통합 서빙
+
+이 프로젝트는 프로덕션 모드에서 **단일 서버로 프론트엔드와 백엔드를 모두 서빙**합니다:
+
+- **프론트엔드**: `dist/` 폴더의 정적 파일이 자동으로 서빙됩니다
+- **백엔드 API**: `/api/*` 경로로 접근
+- **WebSocket**: `/socket.io/*` 경로로 접근
+- **SPA 라우팅**: 그 외 모든 요청은 `index.html`로 리다이렉트
+
+따라서 별도의 프론트엔드 서버나 Nginx 설정이 필요하지 않습니다. 단, 프로덕션 모드(`NODE_ENV=production`)로 실행해야 합니다.
+
+### 환경 변수 설정
+
+프론트엔드 빌드 시 `VITE_SERVER_URL`을 설정할 필요가 없습니다. 
+프론트엔드와 백엔드가 같은 서버에서 서빙되므로 상대 경로를 사용합니다.
+
+---
+
+**배포 완료 후 브라우저에서 EC2 서버 주소(`http://your-ec2-ip:3001`)로 접속하여 사이트가 정상적으로 로드되는지 확인하세요!**
