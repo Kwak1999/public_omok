@@ -26,7 +26,7 @@ const Navbar = ({darkMode, setDarkMode}) => {
                     <h1 
                         className='mr-4 text-3xl font-bold sm:text-4xl text-neutral-700 dark:text-gray-300'
                     >
-                        오목
+                        BlackMok
                     </h1>
 
                     <ul className='hidden md:flex'>
