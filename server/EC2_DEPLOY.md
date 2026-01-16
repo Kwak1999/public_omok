@@ -191,11 +191,11 @@ cat .env
 
 #### PM2 설정 파일 사용
 
-`ecosystem.config.js` 파일이 이미 있습니다:
+`ecosystem.config.cjs` 파일을 사용합니다:
 
 ```bash
-cd ~/server
-pm2 start ecosystem.config.js
+cd ~/public_omok/server
+pm2 start ecosystem.config.cjs --env production
 ```
 
 #### PM2 명령어로 직접 실행
