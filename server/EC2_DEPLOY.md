@@ -2,12 +2,14 @@
 
 이 가이드는 AWS EC2 인스턴스에 백엔드 서버를 배포하는 방법을 설명합니다.
 
+> **🐳 Docker 사용**: Docker를 사용하여 배포하는 경우 [DOCKER_DEPLOY.md](./DOCKER_DEPLOY.md)를 참고하세요.
+
 ## 📋 사전 요구사항
 
 - AWS 계정 및 EC2 인스턴스
 - SSH 접근 권한
-- Node.js 18 이상 설치
-- PM2 또는 systemd (프로세스 관리)
+- Node.js 18 이상 설치 (또는 Docker)
+- PM2 또는 systemd (프로세스 관리, Docker 사용 시 불필요)
 
 ## 🔧 1. EC2 인스턴스 설정
 
@@ -170,7 +172,7 @@ nano .env
 ```env
 NODE_ENV=production
 PORT=3001
-CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
+CORS_ORIGIN=https://strategia-mok.store,https://www.strategia-mok.store
 
 # 데이터베이스 초기화 설정 (선택사항)
 # false: 서버 재시작 시 데이터 유지 (기본값: true - 항상 초기화)
