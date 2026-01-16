@@ -11,33 +11,32 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+
     - run: npm i
     - run: npm run build --if-present
 
-    - uses: aws-actions/configure-aws-credentials@v4
+    # [중요] AWS 자격 증명 설정: 'with' 안에 정확한 파라미터만 넣어야 합니다.
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
       with:
-        args: --acl public-read --follow-symlinks --delete
-      env:
-        SOURCE_DIR: './dist'
-        AWS_REGION: 'ap-northeast-2'
-        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-2
+
+    # [중요] S3 동기화: 변수 문법과 폴더명을 확인하세요.
     - name: Sync build files to S3
       run: aws s3 sync dist s3://${{ secrets.AWS_S3_BUCKET }} --delete
