@@ -16,7 +16,7 @@ RUN npm ci
 COPY . .
 
 # 환경 변수 설정 (기본값: 개발 환경)
-ARG VITE_SERVER_URL=http://localhost:3001
+ARG VITE_SERVER_URL=http://3.36.70.5:3001
 ENV VITE_SERVER_URL=$VITE_SERVER_URL
 
 # 빌드 실행

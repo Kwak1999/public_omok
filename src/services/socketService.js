@@ -7,7 +7,11 @@ class SocketService {
   }
 
   // 서버 연결
-  connect(serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001') {
+  connect(serverUrl = import.meta.env.VITE_SERVER_URL) {
+    if (!serverUrl) {
+      console.error('VITE_SERVER_URL 환경 변수가 설정되지 않았습니다.');
+      throw new Error('서버 URL이 설정되지 않았습니다.');
+    }
     if (this.socket?.connected) {
       return this.socket;
     }

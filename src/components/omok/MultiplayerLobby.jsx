@@ -15,7 +15,7 @@ const MultiplayerLobby = ({ onClose }) => {
   } = useMultiplayerStore();
 
   const [serverUrl, setServerUrl] = useState(
-    import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
+    import.meta.env.VITE_SERVER_URL || ''
   );
   const [inputRoomId, setInputRoomId] = useState('');
   const [showCreateRoom, setShowCreateRoom] = useState(false);
