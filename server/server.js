@@ -22,8 +22,10 @@ import {
   deleteGameById,
 } from './database.js';
 
-// 데이터베이스 초기화 (서버 재시작 시 초기화)
-initDatabase({ resetOnStart: true });
+// 데이터베이스 초기화
+// 서버 재시작 시 항상 데이터 초기화 (환경 변수 RESET_DB_ON_START=false로 비활성화 가능)
+const resetOnStart = process.env.RESET_DB_ON_START !== 'false';
+initDatabase({ resetOnStart });
 
 const app = express();
 app.use(cors());
@@ -402,13 +404,17 @@ io.on('connection', (socket) => {
   });
 
   // 공개방 생성
-  socket.on('createPublicRoom', (callback) => {
+  socket.on('createPublicRoom', (data, callback) => {
     try {
+      // data가 문자열인 경우 (기존 호환성) 또는 객체인 경우 처리
+      const title = typeof data === 'string' ? null : (data?.title || null);
+      const actualCallback = typeof data === 'function' ? data : callback;
+      
       const roomId = `room_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const room = createRoom(roomId, socket.id);
+      const room = createRoom(roomId, socket.id, title);
       
       if (!room) {
-        if (callback) callback({ success: false, error: '방 생성에 실패했습니다.' });
+        if (actualCallback) actualCallback({ success: false, error: '방 생성에 실패했습니다.' });
         return;
       }
       
@@ -428,12 +434,13 @@ io.on('connection', (socket) => {
         });
       }
       
-      if (callback) callback({ success: true, room });
+      if (actualCallback) actualCallback({ success: true, room });
       io.emit('publicRoomsUpdated', { rooms: getPublicRooms() });
-      console.log(`공개방 생성: ${roomId} by ${socket.id}`);
+      console.log(`공개방 생성: ${roomId} by ${socket.id}${title ? ` (제목: ${title})` : ''}`);
     } catch (error) {
       console.error('공개방 생성 오류:', error);
-      if (callback) callback({ success: false, error: error.message });
+      const actualCallback = typeof data === 'function' ? data : callback;
+      if (actualCallback) actualCallback({ success: false, error: error.message });
     }
   });
 

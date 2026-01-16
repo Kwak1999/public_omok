@@ -9,6 +9,8 @@ const RoomList = () => {
   const { connect, isConnected } = useMultiplayerStore();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [roomTitle, setRoomTitle] = useState('');
 
   useEffect(() => {
     // 게스트 로그인 확인
@@ -19,13 +21,25 @@ const RoomList = () => {
 
     // Socket 연결
     if (!isConnected) {
-      connect('http://localhost:3001');
+      const serverUrl = import.meta.env.VITE_SERVER_URL;
+      if (serverUrl) {
+        connect(serverUrl);
+      } else {
+        setLoading(false);
+        return;
+      }
     }
 
     // 공개방 리스트 가져오기
     const fetchRooms = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/rooms');
+        const serverUrl = import.meta.env.VITE_SERVER_URL;
+        if (!serverUrl) {
+          console.error('서버 URL이 설정되지 않았습니다.');
+          setLoading(false);
+          return;
+        }
+        const response = await fetch(`${serverUrl}/api/rooms`);
         const data = await response.json();
         if (data.success) {
           setRooms(data.rooms);
@@ -55,14 +69,22 @@ const RoomList = () => {
   }, [isConnected, connect, navigate]);
 
   const handleCreateRoom = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleConfirmCreate = () => {
     const socket = socketService.getSocket();
     if (!socket) {
       alert('서버에 연결되지 않았습니다.');
       return;
     }
 
-    socket.emit('createPublicRoom', (response) => {
+    const title = roomTitle.trim() || null;
+    
+    socket.emit('createPublicRoom', { title }, (response) => {
       if (response.success && response.room) {
+        setShowCreateModal(false);
+        setRoomTitle('');
         // 방 생성 후 약간의 지연을 두고 이동 (DB 트랜잭션 완료 대기)
         setTimeout(() => {
           navigate(`/room/${response.room.id}`);
@@ -71,6 +93,11 @@ const RoomList = () => {
         alert('방 생성 실패: ' + (response.error || '알 수 없는 오류'));
       }
     });
+  };
+
+  const handleCancelCreate = () => {
+    setShowCreateModal(false);
+    setRoomTitle('');
   };
 
   const handleJoinRoom = (roomId) => {
@@ -130,10 +157,11 @@ const RoomList = () => {
                     </div>
                     <div>
                       <div className="font-semibold text-neutral-700 dark:text-gray-300">
-                        방 ID: {room.id.substring(0, 8)}...
+                        {room.title || `방 ID: ${room.id.substring(0, 8)}...`}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         플레이어: {room.playerCount}명
+                        {room.title && <span className="ml-2 text-xs">({room.id.substring(0, 8)}...)</span>}
                       </div>
                     </div>
                   </div>
@@ -154,6 +182,53 @@ const RoomList = () => {
           )}
         </div>
       </div>
+
+      {/* 방 만들기 모달 */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h2 className="text-2xl font-bold text-neutral-700 dark:text-gray-300 mb-4">
+              방 만들기
+            </h2>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-neutral-700 dark:text-gray-300 mb-2">
+                방 제목 (선택사항)
+              </label>
+              <input
+                type="text"
+                value={roomTitle}
+                onChange={(e) => setRoomTitle(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleConfirmCreate();
+                  }
+                }}
+                placeholder="방 제목을 입력하세요"
+                maxLength={50}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-md dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                제목을 입력하지 않으면 방 ID가 표시됩니다.
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancelCreate}
+                className="px-4 py-2 bg-gray-300 text-gray-700 dark:bg-neutral-600 dark:text-gray-300 rounded-md hover:bg-gray-400 dark:hover:bg-neutral-500 transition"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleConfirmCreate}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold"
+              >
+                만들기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
