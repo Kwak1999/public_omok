@@ -35,7 +35,10 @@ const MultiplayerLobby = ({ onClose }) => {
   const handleCreateRoom = () => {
     createRoom((data) => {
       setShowCreateRoom(true);
-      console.log('방 생성됨:', data);
+      // 개발 모드에서만 로그 출력
+      if (import.meta.env.DEV) {
+        console.log('방 생성됨');
+      }
     });
   };
 
@@ -46,7 +49,10 @@ const MultiplayerLobby = ({ onClose }) => {
     }
     joinRoom(inputRoomId.trim(), (data) => {
       setShowJoinRoom(true);
-      console.log('방 참가됨:', data);
+      // 개발 모드에서만 로그 출력
+      if (import.meta.env.DEV) {
+        console.log('방 참가됨');
+      }
     });
   };
 

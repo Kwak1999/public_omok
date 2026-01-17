@@ -67,7 +67,10 @@ const useMultiplayerStore = create((set, get) => {
       });
 
       socketService.onError((error) => {
-        console.error('Socket 오류:', error);
+        // 개발 모드에서만 로그 출력
+        if (import.meta.env.DEV) {
+          console.error('Socket 오류:', error);
+        }
       });
 
       // 기권 이벤트 리스너 (기권 시에도 gameEndedPlayer 설정)

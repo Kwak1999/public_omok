@@ -41,7 +41,10 @@ const useGameStore = create((set, get) => ({
       
       // 자신의 차례인지 확인
       if (multiplayerState.myPlayer !== state.currentPlayer) {
-        console.log('자신의 차례가 아닙니다.');
+        // 개발 모드에서만 로그 출력
+        if (import.meta.env.DEV) {
+          console.log('자신의 차례가 아닙니다.');
+        }
         return;
       }
       

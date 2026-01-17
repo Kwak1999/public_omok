@@ -9,7 +9,10 @@ class SocketService {
   // 서버 연결
   connect(serverUrl = import.meta.env.VITE_SERVER_URL) {
     if (!serverUrl) {
-      console.error('VITE_SERVER_URL 환경 변수가 설정되지 않았습니다.');
+      // 개발 모드에서만 로그 출력
+      if (import.meta.env.DEV) {
+        console.error('VITE_SERVER_URL 환경 변수가 설정되지 않았습니다.');
+      }
       throw new Error('서버 URL이 설정되지 않았습니다.');
     }
     if (this.socket?.connected) {
@@ -25,16 +28,25 @@ class SocketService {
 
     this.socket.on('connect', () => {
       this.isConnected = true;
-      console.log('서버 연결됨:', this.socket.id);
+      // 개발 모드에서만 로그 출력
+      if (import.meta.env.DEV) {
+        console.log('서버 연결됨');
+      }
     });
 
     this.socket.on('disconnect', () => {
       this.isConnected = false;
-      console.log('서버 연결 해제됨');
+      // 개발 모드에서만 로그 출력
+      if (import.meta.env.DEV) {
+        console.log('서버 연결 해제됨');
+      }
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('연결 오류:', error);
+      // 개발 모드에서만 상세 에러 로그 출력
+      if (import.meta.env.DEV) {
+        console.error('연결 오류:', error);
+      }
     });
 
     return this.socket;
@@ -52,7 +64,9 @@ class SocketService {
   // 방 생성
   createRoom(callback) {
     if (!this.socket) {
-      console.error('소켓이 연결되지 않았습니다.');
+      if (import.meta.env.DEV) {
+        console.error('소켓이 연결되지 않았습니다.');
+      }
       return;
     }
 
@@ -63,7 +77,9 @@ class SocketService {
   // 방 참가
   joinRoom(roomId, callback) {
     if (!this.socket) {
-      console.error('소켓이 연결되지 않았습니다.');
+      if (import.meta.env.DEV) {
+        console.error('소켓이 연결되지 않았습니다.');
+      }
       return;
     }
 
@@ -74,7 +90,9 @@ class SocketService {
   // 착수
   placeStone(roomId, row, col) {
     if (!this.socket) {
-      console.error('소켓이 연결되지 않았습니다.');
+      if (import.meta.env.DEV) {
+        console.error('소켓이 연결되지 않았습니다.');
+      }
       return;
     }
 
@@ -84,7 +102,9 @@ class SocketService {
   // 게임 리셋
   resetGame(roomId, callback) {
     if (!this.socket) {
-      console.error('소켓이 연결되지 않았습니다.');
+      if (import.meta.env.DEV) {
+        console.error('소켓이 연결되지 않았습니다.');
+      }
       if (callback) callback({ success: false, error: '소켓이 연결되지 않았습니다.' });
       return;
     }
@@ -95,7 +115,9 @@ class SocketService {
   // 이벤트 리스너 등록
   on(event, callback) {
     if (!this.socket) {
-      console.error('소켓이 연결되지 않았습니다.');
+      if (import.meta.env.DEV) {
+        console.error('소켓이 연결되지 않았습니다.');
+      }
       return;
     }
 
@@ -139,7 +161,9 @@ class SocketService {
   // Ready 상태 토글
   toggleReady(roomId, callback) {
     if (!this.socket) {
-      console.error('소켓이 연결되지 않았습니다.');
+      if (import.meta.env.DEV) {
+        console.error('소켓이 연결되지 않았습니다.');
+      }
       if (callback) callback({ success: false, error: '소켓이 연결되지 않았습니다.' });
       return;
     }
@@ -155,7 +179,9 @@ class SocketService {
   // 기권
   surrender(roomId, callback) {
     if (!this.socket) {
-      console.error('소켓이 연결되지 않았습니다.');
+      if (import.meta.env.DEV) {
+        console.error('소켓이 연결되지 않았습니다.');
+      }
       if (callback) callback({ success: false, error: '소켓이 연결되지 않았습니다.' });
       return;
     }
