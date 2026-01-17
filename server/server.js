@@ -931,6 +931,49 @@ io.on('connection', (socket) => {
     console.log(`착수: ${roomId} - [${row}][${col}] by ${player.player}`);
   });
 
+  // 시간 초과 (턴 타이머 20초 초과)
+  socket.on('timeout', (data) => {
+    const { roomId } = data;
+    const room = rooms.get(roomId);
+
+    if (!room) {
+      socket.emit('error', { message: '방을 찾을 수 없습니다.' });
+      return;
+    }
+
+    // 현재 플레이어 확인
+    const player = room.players.find(p => p.socketId === socket.id);
+    if (!player) {
+      socket.emit('error', { message: '플레이어를 찾을 수 없습니다.' });
+      return;
+    }
+
+    // 자신의 차례인지 확인
+    if (room.currentPlayer !== player.player) {
+      socket.emit('error', { message: '자신의 차례가 아닙니다.' });
+      return;
+    }
+
+    // 승자가 있으면 시간 초과 처리 불가
+    if (room.winner) {
+      socket.emit('error', { message: '게임이 종료되었습니다.' });
+      return;
+    }
+
+    // 시간 초과로 인한 차례 전환
+    room.currentPlayer = room.currentPlayer === 'black' ? 'white' : 'black';
+    
+    // 방의 모든 플레이어에게 차례 전환 알림
+    io.to(roomId).emit('stonePlaced', {
+      board: room.board,
+      currentPlayer: room.currentPlayer,
+      winner: null,
+      moves: room.moves || [],
+    });
+
+    console.log(`시간 초과: ${roomId} - ${player.player} 시간 초과, 차례 전환: ${room.currentPlayer}`);
+  });
+
   // 기권
   socket.on('surrender', (data, callback) => {
     const { roomId } = data;

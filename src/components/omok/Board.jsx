@@ -7,6 +7,7 @@ import MultiplayerLobby from './MultiplayerLobby';
 import socketService from '../../services/socketService';
 import { saveGameHistory } from '../../utils/gameHistory';
 import { getGuestId } from '../../utils/guestAuth';
+import Timer from './Timer';
 
 const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = null }) => {
     const { 
@@ -355,6 +356,16 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                         )
                     )}
                 </div>
+
+                {/* 타이머 - 게임 진행 중일 때만 표시 */}
+                {(isMultiplayer && (isPlaying || isPrivateGameStarted) && !winner) && (
+                    <Timer />
+                )}
+
+                {/* 싱글플레이어 모드 타이머 */}
+                {!isMultiplayer && !winner && board.some(row => row.some(cell => cell !== null)) && (
+                    <Timer />
+                )}
                 
                 {/* 공개방 모드일 때 게임 종료 후 Ready 버튼 (유저만) */}
                 {isPublicRoom && roomData && roomData.players.length === 2 && winner && !isHost ? (

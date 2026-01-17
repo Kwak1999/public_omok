@@ -3,9 +3,11 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaAlignJustify, FaTimes } from "react-icons/fa";
 import useGameStore from '../stores/useGameStore';
 import useMultiplayerStore from '../stores/useMultiplayerStore';
+import Rule from './omok/Rule';
 
 const Navbar = ({darkMode, setDarkMode}) => {
     const [nav, setNav] = useState(false)
+    const [showRule, setShowRule] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const { winner, board } = useGameStore();
@@ -56,6 +58,14 @@ const Navbar = ({darkMode, setDarkMode}) => {
                             >
                                 경기 기록
                             </Link>
+                        </li>
+                        <li className='text-neutral-800 dark:text-gray-300 ml-4'>
+                            <button
+                                onClick={() => setShowRule(true)}
+                                className="border-none hover:text-blue-600 transition cursor-pointer bg-gray-200 dark:bg-neutral-800 text-neutral-800 dark:text-gray-300"
+                            >
+                                규칙
+                            </button>
                         </li>
                     </ul>
 
@@ -138,7 +148,21 @@ const Navbar = ({darkMode, setDarkMode}) => {
                         경기 기록
                     </Link>
                 </li>
+                <li className={`w-full border-b-2 border-zinc-300 text-gray-700 dark:text-gray-300 ${isGameInProgress ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <button
+                        onClick={() => {
+                            setShowRule(true);
+                            setNav(false);
+                        }}
+                        className="w-full text-left"
+                    >
+                        규칙
+                    </button>
+                </li>
             </ul>
+
+            {/* 규칙 모달 */}
+            <Rule isOpen={showRule} onClose={() => setShowRule(false)} />
         </nav>
 
     );
