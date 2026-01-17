@@ -210,6 +210,7 @@ const RoomList = () => {
                 text-gray-900
                 dark:border-neutral-600
                 rounded-md
+                bg-white
                 dark:bg-neutral-700
                 dark:text-white
                 focus:outline-none
