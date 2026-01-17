@@ -305,41 +305,70 @@ npm run lint
 
 ### 환경 변수
 
+> **보안 주의**: `.env` 파일은 Git에 올라가지 않습니다. `.env.example`에는 **개발 환경용 기본값만** 포함되어 있으며, 프로덕션 환경의 실제 값은 포함되지 않습니다.
+
 #### 프론트엔드
 
-`.env` 파일 생성 (개발 환경):
+**개발 환경 (로컬):**
+```bash
+# .env.example을 복사하여 .env 파일 생성
+cp .env.example .env
+```
+
+`.env.example`에는 다음 기본값이 포함되어 있습니다:
 ```env
 VITE_SERVER_URL=http://localhost:3001
 ```
 
-`.env.production` 파일 생성 (프로덕션 빌드):
+**프로덕션 빌드:**
+프로덕션 환경에서는 `.env.production` 파일을 직접 생성하세요 (`.env.example` 사용하지 않음):
 ```env
-# 백엔드 서버 주소로 변경하세요
-VITE_SERVER_URL=https://api.strategia-mok.store
+# 실제 프로덕션 서버 주소로 변경
+VITE_SERVER_URL=https://api.your-domain.com
 ```
 
 #### 백엔드
 
-`server/.env` 파일 생성 (개발 환경):
+**개발 환경 (로컬):**
+```bash
+# server/.env.example을 복사하여 server/.env 파일 생성
+cp server/.env.example server/.env
+```
+
+`server/.env.example`에는 다음 개발 환경 기본값이 포함되어 있습니다:
 ```env
 PORT=4001
 NODE_ENV=deployment
 CORS_ORIGIN=http://localhost:4001
 
 # 데이터베이스 초기화 설정 (선택사항)
-# false: 서버 재시작 시 데이터 유지 (기본값: true - 항상 초기화)
 # RESET_DB_ON_START=false
 ```
 
-**프로덕션 환경**에서는 다음과 같이 설정하세요:
+**프로덕션 환경 (EC2 등):**
+프로덕션 환경에서는 `.env.example`을 복사한 후 **반드시 프로덕션 값으로 수정**하세요:
+
+```bash
+cd server
+cp .env.example .env
+nano .env  # 또는 vi .env
+```
+
+다음과 같이 수정:
 ```env
 NODE_ENV=production
 PORT=3001
-CORS_ORIGIN=https://strategia-mok.store,https://www.strategia-mok.store
+CORS_ORIGIN=https://your-domain.com,https://www.your-domain.com
 
 # 데이터베이스 초기화 설정 (선택사항)
 # RESET_DB_ON_START=false
 ```
+
+> **중요 사항**:
+> - `.env.example`은 **템플릿**이며, 개발 환경용 기본값만 포함합니다
+> - 프로덕션 환경에서는 `.env.example`을 복사한 후 **반드시 실제 프로덕션 값으로 수정**해야 합니다
+> - 실제 도메인, API 키 등 민감한 정보는 `.env.example`에 포함하지 않습니다
+> - 각 환경(로컬, EC2 등)에서 `.env` 파일을 직접 생성하고 관리해야 합니다
 
 ### 개발 모드 vs 프로덕션 모드
 
