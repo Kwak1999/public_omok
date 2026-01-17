@@ -516,6 +516,142 @@ EC2 배포 시 자동 백업 스크립트 예시는 [server/EC2_DEPLOY.md](./ser
 2. 착수 기록이 있는지 확인 (빈 게임은 저장되지 않음)
 3. 서버 데이터베이스 파일 권한 확인
 
+### 타이머 시간 초과 후 차례가 전환되지 않음
+
+**증상**: 초읽기 20초가 지나도 공격 차례가 상대방으로 넘어가지 않음
+
+**원인**: 
+- 싱글플레이어 모드에서 `setTimeout` 사용으로 인한 타이밍 이슈
+- 멀티플레이어 모드에서 서버에 시간 초과 이벤트가 전송되지 않음
+
+**해결 방법**:
+- ✅ 싱글플레이어 모드: `setTimeout` 제거하고 `useGameStore.setState`로 직접 차례 전환
+- ✅ 멀티플레이어 모드: 서버에 `timeout` 이벤트 전송 및 서버 측 차례 전환 처리 추가
+- ✅ 차례 전환 시 새로운 차례 플레이어의 턴 타이머 자동 리셋
+
+**참고**: `src/components/omok/Timer.jsx`와 `server/server.js`의 `timeout` 이벤트 핸들러 확인
+
+### 규칙 설명창이 바둑알 뒤에 표시됨
+
+**증상**: 규칙 버튼을 클릭하면 규칙 설명창이 바둑알 뒤에 가려져 보임
+
+**원인**: 
+- Rule 컴포넌트가 Navbar 내부에서 렌더링되어 stacking context 문제 발생
+- z-index가 충분히 높지 않음
+
+**해결 방법**:
+- ✅ React Portal을 사용하여 `document.body`에 직접 렌더링
+- ✅ z-index를 `z-[9999]`로 설정하여 최상위에 표시
+- ✅ 배경 오버레이에 반투명 배경 추가
+
+**참고**: `src/components/omok/Rule.jsx`에서 `createPortal` 사용
+
+### 개발자 도구에 소켓 ID 등 개발 정보 노출
+
+**증상**: 프로덕션 환경에서도 개발자 도구에 소켓 ID, 디버그 로그 등이 표시됨
+
+**원인**: 
+- 모든 환경에서 `console.log`가 출력됨
+- 프로덕션 모드와 개발 모드 구분 없음
+
+**해결 방법**:
+- ✅ `import.meta.env.DEV`를 사용하여 개발 모드에서만 로그 출력
+- ✅ 프로덕션 빌드 시 자동으로 로그가 숨겨짐
+- ✅ 소켓 ID 등 민감한 정보는 개발 모드에서만 표시
+
+**수정된 파일**:
+- `src/services/socketService.js`
+- `src/stores/useGameStore.js`
+- `src/components/omok/MultiplayerLobby.jsx`
+- `src/stores/useMultiplayerStore.js`
+
+### .env 파일이 Git에 올라가는 보안 문제
+
+**증상**: `.env` 파일이 Git 저장소에 포함되어 민감한 정보가 노출됨
+
+**원인**: 
+- `.env` 파일이 Git에 추적되고 있었음
+- `.gitignore`에 명시되어 있었지만 이미 추적 중이었음
+
+**해결 방법**:
+1. Git 추적에서 제거:
+   ```bash
+   git rm --cached .env .env.production server/.env server/.env.production
+   ```
+
+2. `.gitignore` 업데이트:
+   ```
+   .env
+   .env.production
+   .env.*.local
+   server/.env
+   server/.env.production
+   server/.env.*.local
+   ```
+
+3. `.env.example` 파일 생성 (템플릿):
+   - 개발 환경용 기본값만 포함
+   - 프로덕션 환경의 실제 값은 포함하지 않음
+   - 각 환경에서 `.env.example`을 복사하여 `.env` 생성
+
+**중요**: 
+- `.env.example`은 Git에 올라가지만 실제 값은 포함하지 않음
+- 각 환경(로컬, EC2)에서 `.env.example`을 복사한 후 실제 값으로 수정해야 함
+
+### EC2에서 git pull 시 충돌 발생
+
+**증상**: `git pull origin main` 실행 시 `.env` 파일 관련 충돌 발생
+
+**원인**: 
+- 로컬에서 `.env` 파일을 삭제했지만 원격에는 수정된 버전이 있음
+- modify/delete 충돌 발생
+
+**해결 방법**:
+```bash
+# 1. rebase 중단
+git rebase --abort
+
+# 2. merge 방식으로 pull
+git pull origin main
+
+# 3. 충돌 발생 시 .env 파일 삭제 확정
+git rm .env server/.env
+
+# 4. 커밋
+git commit -m "Remove .env files from tracking"
+
+# 5. .env.example에서 .env 파일 재생성
+cp server/.env.example server/.env
+# 프로덕션 값으로 수정
+nano server/.env
+```
+
+### .env 파일이 자동으로 로드되지 않음
+
+**증상**: `server/.env` 파일에 `PORT=4001`로 설정했지만 서버가 3001 포트로 실행됨
+
+**원인**: 
+- Node.js는 기본적으로 `.env` 파일을 자동으로 로드하지 않음
+- `dotenv` 패키지가 설치되지 않았거나 로드되지 않음
+
+**해결 방법**:
+1. `dotenv` 패키지 설치:
+   ```bash
+   cd server
+   npm install dotenv
+   ```
+
+2. `server.js` 상단에 추가:
+   ```javascript
+   import 'dotenv/config';
+   ```
+
+3. 이제 `.env` 파일이 자동으로 로드되어 `process.env.PORT`가 올바르게 읽힘
+
+**확인**:
+- `npm run dev` 실행 시 `server/.env`의 `PORT=4001`이 적용됨
+- 프로덕션 환경에서도 `.env` 파일이 자동으로 로드됨
+
 ## 📚 추가 문서
 
 - [멀티플레이어 가이드](./README_MULTIPLAYER.md) - 멀티플레이어 기능 상세 설명
