@@ -467,6 +467,78 @@ EC2 배포 시 자동 백업 스크립트 예시는 [server/EC2_DEPLOY.md](./ser
 4. 브라우저 콘솔에서 오류 확인
 5. 프로덕션 모드에서는 `VITE_SERVER_URL` 설정이 필요 없습니다 (같은 서버에서 서빙)
 
+### 502 Bad Gateway 오류 (프로덕션 환경)
+
+**증상**: `GET https://api.strategia-mok.store/ 502 (Bad Gateway)` 오류 발생
+
+**원인**:
+- 백엔드 서버가 실행되지 않음
+- Nginx가 백엔드 서버에 연결할 수 없음
+- 포트 불일치 (Nginx는 3001로 연결하지만 서버는 다른 포트에서 실행)
+- PM2 프로세스가 중지됨
+
+**해결 방법 (EC2에서 확인)**:
+
+1. **PM2 프로세스 상태 확인**:
+   ```bash
+   pm2 list
+   pm2 logs omok-server
+   ```
+
+2. **서버가 실행 중인지 확인**:
+   ```bash
+   # 포트 3001에서 실행 중인지 확인
+   sudo netstat -tlnp | grep 3001
+   # 또는
+   sudo ss -tlnp | grep 3001
+   ```
+
+3. **서버 재시작**:
+   ```bash
+   cd ~/omok/public_omok/server
+   pm2 restart omok-server
+   # 또는
+   pm2 delete omok-server
+   pm2 start ecosystem.config.js --env production
+   ```
+
+4. **프로덕션 환경 변수 확인**:
+   ```bash
+   # server/.env 파일 확인
+   cat server/.env
+   ```
+   
+   프로덕션 환경에서는 다음과 같이 설정되어 있어야 합니다:
+   ```env
+   NODE_ENV=production
+   PORT=3001
+   CORS_ORIGIN=https://strategia-mok.store,https://www.strategia-mok.store
+   ```
+   
+   > **중요**: 프로덕션 환경에서는 포트 3001을 사용해야 합니다. 개발 환경(4001)과 다릅니다!
+
+5. **Nginx 설정 확인**:
+   ```bash
+   # Nginx 설정 파일 확인
+   sudo nginx -t
+   
+   # Nginx 재시작
+   sudo systemctl restart nginx
+   
+   # Nginx 로그 확인
+   sudo tail -f /var/log/nginx/error.log
+   ```
+
+6. **서버 로그 확인**:
+   ```bash
+   pm2 logs omok-server --lines 50
+   ```
+
+**주의사항**:
+- 개발 환경(`server/.env`): `PORT=4001` 사용
+- 프로덕션 환경(EC2 `server/.env`): `PORT=3001` 사용 (Nginx 설정과 일치해야 함)
+- Nginx는 `proxy_pass http://127.0.0.1:3001;`로 설정되어 있음
+
 ### 정적 파일이 로드되지 않을 때 (404 오류)
 
 프론트엔드 파일(`index-*.js` 등)을 찾을 수 없다는 오류가 발생하는 경우:
