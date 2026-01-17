@@ -1,0 +1,98 @@
+# HTTP 서버 블록 - HTTPS로 리다이렉트
+server {
+    if ($host = api.strategia-mok.store) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    listen 80;
+    listen [::]:80;
+    server_name api.strategia-mok.store;
+    return 404; # managed by Certbot
+}
+
+# HTTPS 서버 블록 - 실제 서비스
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name api.strategia-mok.store;
+
+    # SSL 인증서 (Certbot이 관리)
+    ssl_certificate /etc/letsencrypt/live/api.strategia-mok.store/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/api.strategia-mok.store/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+    # 클라이언트 최대 업로드 크기
+    client_max_body_size 10M;
+
+    # Gzip 압축 활성화
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/javascript application/json;
+
+    # 정적 파일 직접 서빙 (성능 최적화)
+    location /assets/ {
+        alias /root/omok/public_omok/dist/assets/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    location /vite.svg {
+        alias /root/omok/public_omok/dist/vite.svg;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # API 요청은 Express 서버로 프록시
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
+    }
+
+    # WebSocket (Socket.io) 프록시
+    location /socket.io/ {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
+    }
+
+    # 프론트엔드 정적 파일 서빙 (Express 서버로 프록시)
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # 보안 헤더
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # 로그 설정
+    access_log /var/log/nginx/api-access.log;
+    error_log /var/log/nginx/api-error.log;
+}
