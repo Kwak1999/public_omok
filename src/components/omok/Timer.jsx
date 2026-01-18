@@ -162,6 +162,18 @@ const Timer = () => {
         }
     }, [currentPlayer, gameStarted, winner, blackMainTimeExhausted, whiteMainTimeExhausted, blackTurnTime, whiteTurnTime]);
 
+    // 모바일 여부 확인 (화면 너비 기준) - Hook은 항상 early return 전에 호출되어야 함
+    const [isMobile, setIsMobile] = React.useState(false);
+    
+    React.useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     // 게임이 시작되지 않았거나 승자가 있으면 표시하지 않음
     if (!gameStarted || winner) return null;
 
@@ -185,18 +197,6 @@ const Timer = () => {
     const whiteCurrentTime = whiteMainTimeExhausted && whiteTurnTime !== null ? whiteTurnTime : whiteTime;
     const whiteMaxTime = whiteMainTimeExhausted ? TURN_TIME : MAIN_TIME;
     const whitePercentage = (whiteCurrentTime / whiteMaxTime) * 100;
-
-    // 모바일 여부 확인 (화면 너비 기준)
-    const [isMobile, setIsMobile] = React.useState(false);
-    
-    React.useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 640);
-        };
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
 
     return (
         <div 

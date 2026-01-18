@@ -13,8 +13,10 @@ const Replay = () => {
     Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(PLAYER.EMPTY))
   );
   const [loading, setLoading] = useState(true);
+    const [boardPadding, setBoardPadding] = React.useState(12);
 
-  useEffect(() => {
+
+    useEffect(() => {
     const loadGame = async () => {
       const guestId = getGuestId();
       if (!guestId) {
@@ -92,6 +94,7 @@ const Replay = () => {
       const viewportHeight = window.innerHeight;
       const isMobileView = viewportWidth < 640; // sm 브레이크포인트
       setIsMobile(isMobileView);
+      setBoardPadding(isMobileView ? 8 : 12);
       
       // PC에서는 스케일을 적용하지 않음
       if (!isMobileView) {
@@ -143,7 +146,7 @@ const Replay = () => {
   const isAtEnd = currentMoveIndex === game.moves.length;
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-[60px] sm:pt-[70px] md:pt-[80px]">
+    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700">
       <div className="max-w-6xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
         {/* 헤더 */}
         <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-md p-3 sm:p-4 mb-4 sm:mb-6">
@@ -188,83 +191,114 @@ const Replay = () => {
             )}
           </div>
 
-          {/* 보드 */}
-          <div 
-            className="p-1.5 sm:p-2 md:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0 inline-block"
-            style={{
-              transform: isMobile && boardScale < 1 ? `scale(${boardScale})` : 'none',
-              transformOrigin: 'top center',
-              width: isMobile && boardScale < 1 
-                ? `${BOARD_LENGTH + 24 / boardScale}px` 
-                : `${BOARD_LENGTH + 24}px`,
-              height: isMobile && boardScale < 1 
-                ? `${BOARD_LENGTH + 24 / boardScale}px` 
-                : `${BOARD_LENGTH + 24}px`,
-              marginBottom: isMobile && boardScale < 1
-                ? `${Math.max((BOARD_LENGTH + 24) * (1 - boardScale) - 30, 0)}px` 
-                : '0',
-            }}
-          >
-            <div className="relative" style={{ width: BOARD_LENGTH, height: BOARD_LENGTH }}>
-              {/* 세로줄 */}
-              {Array.from({ length: BOARD_SIZE }).map((_, i) => (
-                <div
-                  key={`v-${i}`}
-                  className="absolute bg-amber-800"
-                  style={{
-                    left: i * CELL_GAP,
-                    top: 0,
-                    width: 1,
-                    height: BOARD_LENGTH,
-                  }}
-                />
-              ))}
+            {/* 보드 목재 배경 + 테두리 */}
+            {(() => {
+                const borderPx = isMobile ? 2 : 4;           // ✅ window.innerWidth 사용 X
+                const scale = isMobile ? Math.min(boardScale, 1) : 1;
 
-              {/* 가로줄 */}
-              {Array.from({ length: BOARD_SIZE }).map((_, i) => (
-                <div
-                  key={`h-${i}`}
-                  className="absolute bg-amber-800"
-                  style={{
-                    left: 0,
-                    top: i * CELL_GAP,
-                    width: BOARD_LENGTH,
-                    height: 1,
-                  }}
-                />
-              ))}
+                // ✅ padding + border 포함한 바깥 크기
+                const outerSize = BOARD_LENGTH + boardPadding * 2 + borderPx * 2;
 
-              {/* 성혈 */}
-              {STAR_POSITIONS.map(({ row, col }, idx) => (
-                <span
-                  key={idx}
-                  className="absolute rounded-full bg-amber-800"
-                  style={{
-                    width: 8,
-                    height: 8,
-                    left: col * CELL_GAP - 4,
-                    top: row * CELL_GAP - 4,
-                    pointerEvents: 'none',
-                  }}
-                />
-              ))}
+                return (
+                    // ✅ [레이아웃 박스] : 여기서는 절대 outerSize를 늘리지 않음 (클리핑 방지)
+                    <div
+                        className="flex-shrink-0"
+                        style={{
+                            width: outerSize,
+                            height: outerSize,
+                            marginBottom: scale < 1 ? Math.max(outerSize * (1 - scale) + 50, 50) : 16,
+                        }}
+                    >
+                        {/* ✅ [시각 박스] : 여기만 scale */}
+                        <div
+                            className="rounded-md shadow-lg bg-amber-200 border-amber-700 inline-block relative z-0"
+                            style={{
+                                borderStyle: "solid",
+                                borderWidth: borderPx,
+                                padding: boardPadding,
+                                width: outerSize,
+                                height: outerSize,
+                                transform: `scale(${scale})`,
+                                transformOrigin: "top center",
+                            }}
+                        >
+                            {/* 실제 보드 크기 */}
+                            <div className="relative" style={{ width: BOARD_LENGTH, height: BOARD_LENGTH }}>
+                                {/* 세로줄 (퍼센트 기반) */}
+                                {Array.from({ length: BOARD_SIZE }).map((_, i) => {
+                                    const pos = (i / (BOARD_SIZE - 1)) * 100;
+                                    return (
+                                        <div
+                                            key={`v-${i}`}
+                                            className="absolute bg-amber-800"
+                                            style={{
+                                                left: `${pos}%`,
+                                                top: 0,
+                                                width: 1,
+                                                height: "100%",
+                                                transform: "translateX(-0.5px)",
+                                            }}
+                                        />
+                                    );
+                                })}
 
-              {/* 복기용 셀들 */}
-              {Array.from({ length: BOARD_SIZE }).map((_, row) =>
-                Array.from({ length: BOARD_SIZE }).map((_, col) => (
-                  <ReplayCell
-                    key={`cell-${row}-${col}`}
-                    row={row}
-                    col={col}
-                    value={replayBoard[row][col]}
-                    moveNumber={game.moves.findIndex(m => m.row === row && m.col === col) + 1}
-                  />
-                ))
-              )}
-            </div>
-          </div>
+                                {/* 가로줄 (퍼센트 기반) */}
+                                {Array.from({ length: BOARD_SIZE }).map((_, i) => {
+                                    const pos = (i / (BOARD_SIZE - 1)) * 100;
+                                    return (
+                                        <div
+                                            key={`h-${i}`}
+                                            className="absolute bg-amber-800"
+                                            style={{
+                                                left: 0,
+                                                top: `${pos}%`,
+                                                width: "100%",
+                                                height: 1,
+                                                transform: "translateY(-0.5px)",
+                                            }}
+                                        />
+                                    );
+                                })}
 
-          {/* 복기 컨트롤 버튼 */}
+                                {/* 성혈 (퍼센트 기반) */}
+                                {STAR_POSITIONS.map(({ row, col }, idx) => {
+                                    const x = (col / (BOARD_SIZE - 1)) * 100;
+                                    const y = (row / (BOARD_SIZE - 1)) * 100;
+                                    return (
+                                        <span
+                                            key={idx}
+                                            className="absolute rounded-full bg-amber-800"
+                                            style={{
+                                                width: 8,
+                                                height: 8,
+                                                left: `${x}%`,
+                                                top: `${y}%`,
+                                                transform: "translate(-50%, -50%)",
+                                                pointerEvents: "none",
+                                            }}
+                                        />
+                                    );
+                                })}
+
+                                {/* ✅ 복기용 셀들: ReplayCell 사용 */}
+                                {Array.from({ length: BOARD_SIZE }).map((_, row) =>
+                                    Array.from({ length: BOARD_SIZE }).map((_, col) => (
+                                        <ReplayCell
+                                            key={`cell-${row}-${col}`}
+                                            row={row}
+                                            col={col}
+                                            value={replayBoard[row][col]}
+                                            moveNumber={game.moves.findIndex(m => m.row === row && m.col === col) + 1}
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {/* 복기 컨트롤 버튼 */}
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full px-2 -mt-6 sm:mt-0">
             <button
               onClick={handleGoToStart}

@@ -209,85 +209,93 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 )}
 
                 {/* 보드 목재 배경 + 테두리 */}
-                <div
-                    className="rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0 inline-block relative z-0"
-                    style={{
-                        // ✅ 683 기준 비율로 항상 스케일링
-                        //   - 기존 boardScale(모바일 전용)을 "전체"에도 적용되게 확장
-                        transform: `scale(${Math.min(boardScale, 1)})`,
-                        transformOrigin: "top center",
-                        padding: `${CELL_GAP}px`,
+                {(() => {
+                    // border-2, sm:border-4 기준 (md도 sm와 동일하게 4px)
+                    const borderPx = window.innerWidth >= 640 ? 4 : 2; // sm 이상 4, 그 외 2
+                    const scale = Math.min(boardScale, 1);
 
-                        // ✅ 격자선 간격을 일정하게 하기 위해 CELL_GAP 패딩 사용
-                        width: `${(BOARD_LENGTH + CELL_GAP * 2) / Math.min(boardScale, 1)}px`,
-                        height: `${(BOARD_LENGTH + CELL_GAP * 2) / Math.min(boardScale, 1)}px`,
+                    // ✅ padding + border까지 포함한 “바깥 박스의 실제 크기”
+                    const outerSize = BOARD_LENGTH + boardPadding * 2 + borderPx * 2;
 
-                        // 기존 marginBottom 로직은 유지
-                        marginBottom:
-                            boardScale < 1
-                                ? `${Math.max((BOARD_LENGTH + CELL_GAP * 2) * (1 - boardScale) + 50, 50)}px`
-                                : "16px",
-                    }}
-                >
-                    {/* 실제 보드 크기 - 격자선이 일정한 간격을 갖도록 */}
-                    <div 
-                        className="relative" 
-                        style={{ 
-                            width: BOARD_LENGTH, 
-                            height: BOARD_LENGTH
-                        }}
-                    >
-                        {/* 세로줄 15개 (픽셀 기반 - 일정한 간격) */}
-                        {Array.from({ length: BOARD_SIZE }).map((_, i) => (
-                            <div
-                                key={`v-${i}`}
-                                className="absolute bg-amber-800"
-                                style={{
-                                    left: i * CELL_GAP,
-                                    top: 0,
-                                    width: 1,
-                                    height: BOARD_LENGTH,
-                                }}
-                            />
-                        ))}
+                    return (
+                        <div
+                            className="rounded-md shadow-lg bg-amber-200 border-amber-700 flex-shrink-0 inline-block relative z-0"
+                            style={{
+                                // ✅ border는 px로 직접 지정 (border-3 문제 제거)
+                                borderStyle: "solid",
+                                borderWidth: borderPx,
 
-                        {/* 가로줄 15개 (픽셀 기반 - 일정한 간격) */}
-                        {Array.from({ length: BOARD_SIZE }).map((_, i) => (
-                            <div
-                                key={`h-${i}`}
-                                className="absolute bg-amber-800"
-                                style={{
-                                    left: 0,
-                                    top: i * CELL_GAP,
-                                    width: BOARD_LENGTH,
-                                    height: 1,
-                                }}
-                            />
-                        ))}
+                                // ✅ padding도 state 값으로 통일 (모든 모서리 동일)
+                                padding: boardPadding,
 
-                        {/* 성혈 5개 (픽셀 기반 - 유지보수 용이) */}
-                        {STAR_POSITIONS.map(({ row, col }, idx) => (
-                            <span
-                                key={idx}
-                                className="absolute rounded-full bg-amber-800"
-                                style={{
-                                    width: 8,
-                                    height: 8,
-                                    left: col * CELL_GAP - 4,
-                                    top: row * CELL_GAP - 4,
-                                    pointerEvents: "none",
-                                }}
-                            />
-                        ))}
+                                transform: `scale(${scale})`,
+                                transformOrigin: "top center",
 
-                        {/* Cell 컴포넌트들 (15x15) */}
-                        {Array.from({ length: BOARD_SIZE }).map((_, row) =>
-                            Array.from({ length: BOARD_SIZE }).map((_, col) => (
-                                <Cell key={`cell-${row}-${col}`} row={row} col={col} />
-                            ))
-                        )}
-                    </div>
-                </div>
+                                // ✅ scale 보정도 outerSize 기준으로 정확히
+                                width: `${outerSize / scale}px`,
+                                height: `${outerSize / scale}px`,
+
+                                marginBottom:
+                                    scale < 1
+                                        ? `${Math.max(outerSize * (1 - scale) + 50, 50)}px`
+                                        : "16px",
+                            }}
+                        >
+                            {/* 실제 보드 크기 */}
+                            <div className="relative" style={{ width: BOARD_LENGTH, height: BOARD_LENGTH }}>
+                                {/* 세로줄 */}
+                                {Array.from({ length: BOARD_SIZE }).map((_, i) => (
+                                    <div
+                                        key={`v-${i}`}
+                                        className="absolute bg-amber-800"
+                                        style={{
+                                            left: i * CELL_GAP,
+                                            top: 0,
+                                            width: 1,
+                                            height: BOARD_LENGTH,
+                                        }}
+                                    />
+                                ))}
+
+                                {/* 가로줄 */}
+                                {Array.from({ length: BOARD_SIZE }).map((_, i) => (
+                                    <div
+                                        key={`h-${i}`}
+                                        className="absolute bg-amber-800"
+                                        style={{
+                                            left: 0,
+                                            top: i * CELL_GAP,
+                                            width: BOARD_LENGTH,
+                                            height: 1,
+                                        }}
+                                    />
+                                ))}
+
+                                {/* 성혈 */}
+                                {STAR_POSITIONS.map(({ row, col }, idx) => (
+                                    <span
+                                        key={idx}
+                                        className="absolute rounded-full bg-amber-800"
+                                        style={{
+                                            width: 8,
+                                            height: 8,
+                                            left: col * CELL_GAP - 4,
+                                            top: row * CELL_GAP - 4,
+                                            pointerEvents: "none",
+                                        }}
+                                    />
+                                ))}
+
+                                {/* Cell */}
+                                {Array.from({ length: BOARD_SIZE }).map((_, row) =>
+                                    Array.from({ length: BOARD_SIZE }).map((_, col) => (
+                                        <Cell key={`cell-${row}-${col}`} row={row} col={col} />
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    );
+                })()}
 
                 {/* 착수 버튼 영역 */}
                 <div 
