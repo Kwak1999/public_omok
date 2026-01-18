@@ -105,7 +105,7 @@ const RoomList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 p-3 sm:p-4 md:p-6 lg:p-8 pt-16 sm:pt-20 md:pt-24">
+    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 p-3 sm:p-4 md:p-6 lg:p-8 pt-[80px] sm:pt-[80px] md:pt-[85px]">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-3 sm:p-4 md:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">

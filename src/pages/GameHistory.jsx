@@ -58,7 +58,7 @@ const GameHistory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-16 sm:pt-20">
+    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-[60px] sm:pt-[70px] md:pt-[80px]">
       <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-3 sm:p-4 md:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">

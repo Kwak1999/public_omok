@@ -43,7 +43,7 @@ const Home = () => {
     };
     
     return (
-        <div className="bg-slate-100 min-h-screen dark:bg-neutral-700 pt-16 sm:pt-20 md:pt-20">
+        <div className="bg-slate-100 min-h-screen dark:bg-neutral-700 pt-[60px] sm:pt-[70px] md:pt-[80px]">
             <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
                 <div className="text-center mb-6 sm:mb-8">
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-700 dark:text-gray-300 mb-3 sm:mb-4">

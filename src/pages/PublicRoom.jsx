@@ -290,7 +290,7 @@ const PublicRoom = () => {
   const isPlaying = room.status === 'playing';
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-16 sm:pt-20">
+    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-[60px] sm:pt-[70px] md:pt-[80px]">
       {/* 방 정보 및 컨트롤 */}
       <div className="bg-white dark:bg-neutral-800 shadow-md p-2 sm:p-3 md:p-4">
         <div className="max-w-6xl mx-auto space-y-2 sm:space-y-3">

@@ -101,25 +101,28 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
             const isMobileView = viewportWidth < 640; // sm 브레이크포인트
             setIsMobile(isMobileView);
             
-            // 패딩과 여유 공간 고려 (좌우 패딩 16px * 2 + 보드 테두리 8px * 2)
-            const horizontalPadding = 32; // 좌우 패딩
-            const verticalPadding = 200; // 상하 여유 공간 (헤더, 버튼 등)
+            // PC에서는 스케일을 적용하지 않음
+            if (!isMobileView) {
+                setBoardScale(1);
+                return;
+            }
             
-            // 사용 가능한 너비와 높이
-            const availableWidth = viewportWidth - horizontalPadding;
-            const availableHeight = viewportHeight - verticalPadding;
+            // 모바일에서만 스케일 계산
+            // 매우 작은 화면(150px~640px)에서도 보드가 제대로 보이도록 조정
+            const horizontalPadding = Math.max(viewportWidth * 0.05, 8); // 최소 8px, 화면의 5%
+            const verticalPadding = Math.max(viewportHeight * 0.25, 180); // 최소 180px, 화면의 25%
             
-            // 보드 실제 크기 (보드 + 테두리 패딩)
+            const availableWidth = Math.max(viewportWidth - horizontalPadding * 2, 120); // 최소 120px 보장
+            const availableHeight = Math.max(viewportHeight - verticalPadding, 250); // 최소 250px 보장
+            
             const boardWithPadding = BOARD_LENGTH + 16; // 보드 + 내부 패딩
             
-            // 너비와 높이 모두 고려한 스케일 계산
             const scaleByWidth = availableWidth / boardWithPadding;
             const scaleByHeight = availableHeight / boardWithPadding;
             
-            // 더 작은 스케일을 선택하여 화면에 맞춤
+            // 더 작은 스케일을 선택하되, 최소 0.35 (35%)로 제한하여 보드가 너무 작아지지 않도록
             const scale = Math.min(scaleByWidth, scaleByHeight, 1);
-            
-            setBoardScale(Math.max(scale, 0.5)); // 최소 50% 스케일
+            setBoardScale(Math.max(scale, 0.35)); // 최소 35% 스케일
         };
         
         calculateScale();
@@ -133,7 +136,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
 
     return (
         // 중앙정렬, 배경색, 화면 전체 높이
-        <div className="min-h-screen flex flex-col items-center bg-slate-100 dark:bg-neutral-700 pt-16 sm:pt-20 pb-4 sm:pb-8 px-2 sm:px-4 md:px-6">
+        <div className="min-h-screen flex flex-col items-center bg-slate-100 dark:bg-neutral-700 pt-[60px] sm:pt-[70px] md:pt-[80px] pb-4 sm:pb-8 px-2 sm:px-4 md:px-6">
             {showLobby && <MultiplayerLobby onClose={() => setShowLobby(false)} />}
             
             <div className="flex flex-col items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 w-full max-w-2xl flex-shrink-0">
@@ -195,20 +198,18 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
 
                 {/* 보드 목재 배경 + 테두리 */}
                 <div 
-                    className="p-1.5 sm:p-2 md:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0"
+                    className="p-1.5 sm:p-2 md:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0 inline-block"
                     style={{
-                        transform: boardScale < 1 ? `scale(${boardScale})` : 'none',
+                        transform: isMobile && boardScale < 1 ? `scale(${boardScale})` : 'none',
                         transformOrigin: 'top center',
-                        width: boardScale < 1 
+                        width: isMobile && boardScale < 1 
                             ? `${BOARD_LENGTH + 16 / boardScale}px` 
                             : `${BOARD_LENGTH + 16}px`,
-                        height: boardScale < 1 
+                        height: isMobile && boardScale < 1 
                             ? `${BOARD_LENGTH + 16 / boardScale}px` 
                             : `${BOARD_LENGTH + 16}px`,
-                        marginBottom: boardScale < 1 && isMobile
+                        marginBottom: isMobile && boardScale < 1
                             ? `${Math.max((BOARD_LENGTH + 16) * (1 - boardScale) - 30, 0)}px` 
-                            : boardScale < 1
-                            ? `${(BOARD_LENGTH + 16) * (1 - boardScale)}px`
                             : '0',
                     }}
                 >
