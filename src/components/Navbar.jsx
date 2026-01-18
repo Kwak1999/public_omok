@@ -22,8 +22,8 @@ const Navbar = ({darkMode, setDarkMode}) => {
     const isGameInProgress = isMultiplayer && !winner && (hasStonesOnBoard || roomStatus === 'playing');
     
     return (
-        <nav className='w-screen h-[80px] z-10 bg-zinc-200 fixed drop-shadow-lg dark:bg-neutral-800'>
-            <div className='flex items-center justify-between w-full h-full px-4 sm:px-6 md:px-10'>
+        <nav className='w-screen h-[60px] sm:h-[70px] md:h-[80px] z-10 bg-zinc-200 fixed drop-shadow-lg dark:bg-neutral-800'>
+            <div className='flex items-center justify-between w-full h-full px-3 sm:px-4 md:px-6 lg:px-10'>
                 <div className='flex items-center'>
                     <h1 
                         className='mr-2 sm:mr-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-neutral-700 dark:text-gray-300'
@@ -119,7 +119,7 @@ const Navbar = ({darkMode, setDarkMode}) => {
             </div>
 
 
-            <ul className={!nav ? 'hidden' : 'absolute top-[80px] left-0 bg-zinc-200 w-full px-4 py-2 dark:bg-neutral-800 shadow-lg'}>
+            <ul className={!nav ? 'hidden' : 'absolute top-[60px] sm:top-[70px] md:top-[80px] left-0 bg-zinc-200 w-full px-3 sm:px-4 py-2 dark:bg-neutral-800 shadow-lg'}>
 
                 <li className={`w-full border-b-2 border-zinc-300 text-gray-700 dark:text-gray-300 ${isGameInProgress ? 'opacity-50 pointer-events-none' : ''}`}>
                     <Link 

@@ -105,23 +105,23 @@ const RoomList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 p-4 sm:p-6 md:p-8 pt-20 sm:pt-24">
+    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 p-3 sm:p-4 md:p-6 lg:p-8 pt-16 sm:pt-20 md:pt-24">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-700 dark:text-gray-300">
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-3 sm:p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-neutral-700 dark:text-gray-300">
               오목 공개방
             </h1>
             <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => navigate('/')}
-                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+                className="flex-1 sm:flex-none px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
               >
                 홈으로
               </button>
               <button
                 onClick={handleCreateRoom}
-                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold"
+                className="flex-1 sm:flex-none px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold"
               >
                 방 만들기
               </button>

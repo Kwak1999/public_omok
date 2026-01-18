@@ -290,69 +290,68 @@ const PublicRoom = () => {
   const isPlaying = room.status === 'playing';
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-20">
+    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-16 sm:pt-20">
       {/* 방 정보 및 컨트롤 */}
-      <div className="bg-white dark:bg-neutral-800 shadow-md p-3 sm:p-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+      <div className="bg-white dark:bg-neutral-800 shadow-md p-2 sm:p-3 md:p-4">
+        <div className="max-w-6xl mx-auto space-y-2 sm:space-y-3">
+          {/* 첫 번째 줄: 뒤로가기 버튼과 방 정보 */}
+          <div className="flex items-center gap-2 w-full">
             <button
               onClick={handleLeaveRoom}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-md transition bg-gray-500 text-white hover:bg-gray-600 flex-shrink-0"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-md transition bg-gray-500 text-white hover:bg-gray-600 flex-shrink-0"
             >
-              ← 방 목록
+              ← 목록
             </button>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm sm:text-base text-neutral-700 dark:text-gray-300 truncate">
-                {room.title || `방 ID: ${room.id.substring(0, 12)}...`}
+              <div className="font-semibold text-xs sm:text-sm md:text-base text-neutral-700 dark:text-gray-300 truncate">
+                {room.title || `방 ID: ${room.id.substring(0, 10)}...`}
               </div>
-              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                {room.title && <span className="text-xs">({room.id.substring(0, 8)}...)</span>}
-                <span className={room.title ? 'ml-2' : ''}>플레이어: {room.players.length}/2</span>
+              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                플레이어: {room.players.length}/2
               </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-end">
-            {/* 플레이어 상태 */}
-            <div className="flex gap-1.5 sm:gap-2">
-              {room.players.map((player, index) => (
-                <div
-                  key={index}
-                  className={`px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm ${
-                    player.socketId === mySocketId
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  {player.playerType === 'black' ? '⚫ 흑돌' : '⚪ 백돌'}
-                  {player.isReady && ' ✓'}
-                  {player.socketId === mySocketId && ' (나)'}
-                </div>
-              ))}
             </div>
             <button
               onClick={handleLeaveRoom}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-md transition bg-red-500 text-white hover:bg-red-600 flex-shrink-0"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-md transition bg-red-500 text-white hover:bg-red-600 flex-shrink-0"
             >
               나가기
             </button>
+          </div>
 
+          {/* 두 번째 줄: 플레이어 상태 */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            {room.players.map((player, index) => (
+              <div
+                key={index}
+                className={`px-2 sm:px-2.5 md:px-3 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs md:text-sm whitespace-nowrap ${
+                  player.socketId === mySocketId
+                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                {player.playerType === 'black' ? '⚫ 흑돌' : '⚪ 백돌'}
+                {player.isReady && ' ✓'}
+                {player.socketId === mySocketId && ' (나)'}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
       {/* 게임 보드 - 2명이 들어오면 항상 표시 */}
       {room.players.length === 2 ? (
-        <Board 
-          isPublicRoom={true}
-          onToggleReady={handleToggleReady}
-          onStartGame={handleStartGame}
-          roomData={room}
-        />
+        <div className="flex-1 overflow-hidden">
+          <Board 
+            isPublicRoom={true}
+            onToggleReady={handleToggleReady}
+            onStartGame={handleStartGame}
+            roomData={room}
+          />
+        </div>
       ) : (
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex items-center justify-center min-h-[50vh] sm:min-h-[60vh] px-4">
           <div className="text-center">
-            <div className="text-xl text-gray-600 dark:text-gray-400 mb-4">
+            <div className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-4">
               상대방을 기다리는 중... ({room.players.length}/2)
             </div>
           </div>

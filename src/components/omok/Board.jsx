@@ -90,28 +90,50 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
         }
     };
 
-    // 모바일에서 보드 크기 계산 (화면 너비의 90%를 넘지 않도록)
+    // 모바일에서 보드 크기 계산 (화면 너비와 높이를 모두 고려)
     const [boardScale, setBoardScale] = React.useState(1);
     
     React.useEffect(() => {
         const calculateScale = () => {
             const viewportWidth = window.innerWidth;
-            const maxBoardWidth = Math.min(BOARD_LENGTH + 24, viewportWidth * 0.9); // 보드 + 패딩
-            const scale = maxBoardWidth / (BOARD_LENGTH + 24);
-            setBoardScale(Math.min(scale, 1)); // 1보다 크게 확대하지 않음
+            const viewportHeight = window.innerHeight;
+            
+            // 패딩과 여유 공간 고려 (좌우 패딩 16px * 2 + 보드 테두리 8px * 2)
+            const horizontalPadding = 32; // 좌우 패딩
+            const verticalPadding = 200; // 상하 여유 공간 (헤더, 버튼 등)
+            
+            // 사용 가능한 너비와 높이
+            const availableWidth = viewportWidth - horizontalPadding;
+            const availableHeight = viewportHeight - verticalPadding;
+            
+            // 보드 실제 크기 (보드 + 테두리 패딩)
+            const boardWithPadding = BOARD_LENGTH + 16; // 보드 + 내부 패딩
+            
+            // 너비와 높이 모두 고려한 스케일 계산
+            const scaleByWidth = availableWidth / boardWithPadding;
+            const scaleByHeight = availableHeight / boardWithPadding;
+            
+            // 더 작은 스케일을 선택하여 화면에 맞춤
+            const scale = Math.min(scaleByWidth, scaleByHeight, 1);
+            
+            setBoardScale(Math.max(scale, 0.5)); // 최소 50% 스케일
         };
         
         calculateScale();
         window.addEventListener('resize', calculateScale);
-        return () => window.removeEventListener('resize', calculateScale);
+        window.addEventListener('orientationchange', calculateScale);
+        return () => {
+            window.removeEventListener('resize', calculateScale);
+            window.removeEventListener('orientationchange', calculateScale);
+        };
     }, []);
 
     return (
         // 중앙정렬, 배경색, 화면 전체 높이
-        <div className="min-h-screen grid place-items-center bg-slate-100 dark:bg-neutral-700 pt-20 pb-8 px-4 sm:px-6">
+        <div className="min-h-screen flex flex-col items-center bg-slate-100 dark:bg-neutral-700 pt-16 sm:pt-20 pb-4 sm:pb-8 px-2 sm:px-4 md:px-6">
             {showLobby && <MultiplayerLobby onClose={() => setShowLobby(false)} />}
             
-            <div className="flex flex-col items-center gap-3 sm:gap-4 w-full max-w-2xl">
+            <div className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-2xl flex-shrink-0">
                 {/* 멀티플레이어 모드 표시 */}
                 {isMultiplayer && (
                     <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full">
@@ -170,12 +192,13 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
 
                 {/* 보드 목재 배경 + 테두리 */}
                 <div 
-                    className="p-2 sm:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700"
+                    className="p-1.5 sm:p-2 md:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0"
                     style={{
                         transform: `scale(${boardScale})`,
-                        transformOrigin: 'center',
-                        width: boardScale < 1 ? `${(BOARD_LENGTH + 16) / boardScale}px` : 'auto',
-                        height: boardScale < 1 ? `${(BOARD_LENGTH + 16) / boardScale}px` : 'auto',
+                        transformOrigin: 'top center',
+                        width: `${BOARD_LENGTH + (boardScale < 1 ? 16 / boardScale : 16)}px`,
+                        height: `${BOARD_LENGTH + (boardScale < 1 ? 16 / boardScale : 16)}px`,
+                        marginBottom: boardScale < 1 ? `${(BOARD_LENGTH + 16) * (1 - boardScale)}px` : '0',
                     }}
                 >
                     {/* 실제 보드 크기 */}
@@ -233,7 +256,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 </div>
 
                 {/* 착수 버튼 영역 */}
-                <div className="flex flex-wrap gap-2 sm:gap-3 justify-center w-full px-4">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4">
                     {/* 기권 버튼 - 멀티플레이어 모드이고 게임이 진행 중일 때만 표시 */}
                     {isMultiplayer && !winner && (isPlaying || isPrivateGameStarted) && (
                         <button
