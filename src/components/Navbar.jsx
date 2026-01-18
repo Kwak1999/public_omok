@@ -23,10 +23,10 @@ const Navbar = ({darkMode, setDarkMode}) => {
     
     return (
         <nav className='w-screen h-[80px] z-10 bg-zinc-200 fixed drop-shadow-lg dark:bg-neutral-800'>
-            <div className='flex items-center justify-between w-full h-full px-10'>
+            <div className='flex items-center justify-between w-full h-full px-4 sm:px-6 md:px-10'>
                 <div className='flex items-center'>
                     <h1 
-                        className='mr-4 text-3xl font-bold sm:text-4xl text-neutral-700 dark:text-gray-300'
+                        className='mr-2 sm:mr-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-neutral-700 dark:text-gray-300'
                     >
                         BlackMok
                     </h1>
@@ -119,7 +119,7 @@ const Navbar = ({darkMode, setDarkMode}) => {
             </div>
 
 
-            <ul className={!nav ? 'hidden' : 'absolute bg-zinc-200 w-full px-8 dark:bg-neutral-800'}>
+            <ul className={!nav ? 'hidden' : 'absolute top-[80px] left-0 bg-zinc-200 w-full px-4 py-2 dark:bg-neutral-800 shadow-lg'}>
 
                 <li className={`w-full border-b-2 border-zinc-300 text-gray-700 dark:text-gray-300 ${isGameInProgress ? 'opacity-50 pointer-events-none' : ''}`}>
                     <Link 
@@ -154,7 +154,7 @@ const Navbar = ({darkMode, setDarkMode}) => {
                             setShowRule(true);
                             setNav(false);
                         }}
-                        className="w-full text-left"
+                        className="w-full text-left border-none bg-gray-200 dark:bg-neutral-800 text-gray-700 dark:text-gray-300"
                     >
                         규칙
                     </button>

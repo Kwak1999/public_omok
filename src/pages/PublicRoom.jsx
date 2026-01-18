@@ -292,33 +292,33 @@ const PublicRoom = () => {
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-20">
       {/* 방 정보 및 컨트롤 */}
-      <div className="bg-white dark:bg-neutral-800 shadow-md p-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className="bg-white dark:bg-neutral-800 shadow-md p-3 sm:p-4">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <button
               onClick={handleLeaveRoom}
-              className="px-4 py-2 rounded-md transition bg-gray-500 text-white hover:bg-gray-600"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-md transition bg-gray-500 text-white hover:bg-gray-600 flex-shrink-0"
             >
               ← 방 목록
             </button>
-            <div>
-              <div className="font-semibold text-neutral-700 dark:text-gray-300">
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm sm:text-base text-neutral-700 dark:text-gray-300 truncate">
                 {room.title || `방 ID: ${room.id.substring(0, 12)}...`}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 {room.title && <span className="text-xs">({room.id.substring(0, 8)}...)</span>}
                 <span className={room.title ? 'ml-2' : ''}>플레이어: {room.players.length}/2</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-end">
             {/* 플레이어 상태 */}
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 sm:gap-2">
               {room.players.map((player, index) => (
                 <div
                   key={index}
-                  className={`px-3 py-1 rounded-md text-sm ${
+                  className={`px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm ${
                     player.socketId === mySocketId
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -332,7 +332,7 @@ const PublicRoom = () => {
             </div>
             <button
               onClick={handleLeaveRoom}
-              className="px-4 py-2 rounded-md transition bg-red-500 text-white hover:bg-red-600"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-md transition bg-red-500 text-white hover:bg-red-600 flex-shrink-0"
             >
               나가기
             </button>

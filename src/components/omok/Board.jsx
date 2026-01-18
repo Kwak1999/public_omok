@@ -90,22 +90,38 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
         }
     };
 
+    // 모바일에서 보드 크기 계산 (화면 너비의 90%를 넘지 않도록)
+    const [boardScale, setBoardScale] = React.useState(1);
+    
+    React.useEffect(() => {
+        const calculateScale = () => {
+            const viewportWidth = window.innerWidth;
+            const maxBoardWidth = Math.min(BOARD_LENGTH + 24, viewportWidth * 0.9); // 보드 + 패딩
+            const scale = maxBoardWidth / (BOARD_LENGTH + 24);
+            setBoardScale(Math.min(scale, 1)); // 1보다 크게 확대하지 않음
+        };
+        
+        calculateScale();
+        window.addEventListener('resize', calculateScale);
+        return () => window.removeEventListener('resize', calculateScale);
+    }, []);
+
     return (
         // 중앙정렬, 배경색, 화면 전체 높이
-        <div className="min-h-screen grid place-items-center bg-slate-100 dark:bg-neutral-700">
+        <div className="min-h-screen grid place-items-center bg-slate-100 dark:bg-neutral-700 pt-20 pb-8 px-4 sm:px-6">
             {showLobby && <MultiplayerLobby onClose={() => setShowLobby(false)} />}
             
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-3 sm:gap-4 w-full max-w-2xl">
                 {/* 멀티플레이어 모드 표시 */}
                 {isMultiplayer && (
-                    <div className="flex items-center gap-4">
-                        <div className="px-4 py-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                            <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full">
+                        <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                            <span className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-300">
                                 멀티플레이어 모드
                             </span>
                         </div>
                         {displayPlayer && (
-                            <div className="text-sm text-neutral-600 dark:text-gray-400">
+                            <div className="text-xs sm:text-sm text-neutral-600 dark:text-gray-400">
                                 내 돌: {displayPlayer === 'black' ? '⚫ 흑돌' : '⚪ 백돌'}
                             </div>
                         )}
@@ -117,22 +133,22 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                     isMultiplayer && displayPlayer ? (
                         // 멀티플레이어 모드: 승자/패자 구분
                         displayPlayer === winner ? (
-                            <div className="text-3xl font-bold text-green-600 dark:text-green-400 animate-pulse">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400 animate-pulse text-center px-4">
                                 🎉 {winner === 'black' ? '⚫ 흑돌' : '⚪ 백돌'} 승리! 🎉
                             </div>
                         ) : (
-                            <div className="text-3xl font-bold text-red-600 dark:text-red-400 animate-pulse">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600 dark:text-red-400 animate-pulse text-center px-4">
                                 😢 {winner === 'black' ? '⚫ 흑돌' : '⚪ 백돌'} 승리... 패배 😢
                             </div>
                         )
                     ) : (
                         // 싱글플레이어 모드
-                        <div className="text-3xl font-bold text-green-600 dark:text-green-400 animate-pulse">
+                        <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400 animate-pulse text-center px-4">
                             🎉 {winner === 'black' ? '⚫ 흑돌' : '⚪ 백돌'} 승리! 🎉
                         </div>
                     )
                 ) : (
-                    <div className="text-xl font-bold text-neutral-700 dark:text-gray-300">
+                    <div className="text-base sm:text-lg md:text-xl font-bold text-neutral-700 dark:text-gray-300 text-center px-4">
                         {isMultiplayer && myPlayer === currentPlayer ? (
                             <span className="text-green-600 dark:text-green-400">
                                 ✅ 당신의 차례입니다!
@@ -153,7 +169,15 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 )}
 
                 {/* 보드 목재 배경 + 테두리 */}
-                <div className="p-3 rounded-md shadow-lg bg-amber-200 border-4 border-amber-700">
+                <div 
+                    className="p-2 sm:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700"
+                    style={{
+                        transform: `scale(${boardScale})`,
+                        transformOrigin: 'center',
+                        width: boardScale < 1 ? `${(BOARD_LENGTH + 16) / boardScale}px` : 'auto',
+                        height: boardScale < 1 ? `${(BOARD_LENGTH + 16) / boardScale}px` : 'auto',
+                    }}
+                >
                     {/* 실제 보드 크기 */}
                     <div className="relative" style={{width: BOARD_LENGTH, height: BOARD_LENGTH}}>
                         {/* 세로줄 15개 */}
@@ -209,7 +233,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 </div>
 
                 {/* 착수 버튼 영역 */}
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3 justify-center w-full px-4">
                     {/* 기권 버튼 - 멀티플레이어 모드이고 게임이 진행 중일 때만 표시 */}
                     {isMultiplayer && !winner && (isPlaying || isPrivateGameStarted) && (
                         <button
@@ -222,7 +246,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                     });
                                 }
                             }}
-                            className="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition font-semibold"
+                            className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-red-500 text-white rounded-md hover:bg-red-600 transition font-semibold"
                         >
                             기권
                         </button>
@@ -233,7 +257,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                             {!isSaved && (
                                 <button
                                     onClick={handleSaveGame}
-                                    className="px-6 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition font-semibold"
+                                    className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-purple-500 text-white rounded-md hover:bg-purple-600 transition font-semibold"
                                 >
                                     저장하기
                                 </button>
@@ -241,7 +265,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                             {isSaved && (
                                 <button
                                     disabled
-                                    className="px-6 py-2 bg-gray-300 text-gray-500 rounded-md cursor-not-allowed font-semibold"
+                                    className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-gray-300 text-gray-500 rounded-md cursor-not-allowed font-semibold"
                                 >
                                     저장됨
                                 </button>
@@ -257,7 +281,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                         });
                                     }}
                                     disabled={!guestReady}
-                                    className={`px-6 py-2 rounded-md font-semibold transition ${
+                                    className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
                                         guestReady
                                             ? 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
                                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -270,7 +294,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                 // 공개방이 아닐 때는 기존대로 새 게임 버튼 표시
                                 <button 
                                     onClick={resetGame}
-                                    className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition font-semibold"
+                                    className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-500 text-white rounded-md hover:bg-green-600 transition font-semibold"
                                 >
                                     새 게임 시작
                                 </button>
@@ -285,7 +309,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                     <button
                                         onClick={onStartGame}
                                         disabled={!guestReady}
-                                        className={`px-6 py-2 rounded-md font-semibold transition ${
+                                        className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
                                             guestReady
                                                 ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
                                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -297,7 +321,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                 ) : (
                                     <button
                                         onClick={onToggleReady}
-                                        className={`px-6 py-2 rounded-md font-semibold transition ${
+                                        className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
                                             myPublicPlayer?.isReady
                                                 ? 'bg-yellow-500 text-white hover:bg-yellow-600'
                                                 : 'bg-green-500 text-white hover:bg-green-600'
@@ -312,7 +336,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                     <button 
                                         onClick={handlePlaceStone}
                                         disabled={!selectedPosition || (isMultiplayer && myPlayer !== currentPlayer)}
-                                        className={`px-6 py-2 rounded-md font-semibold transition ${
+                                        className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
                                             selectedPosition && (!isMultiplayer || myPlayer === currentPlayer)
                                                 ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
                                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -323,7 +347,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                     {selectedPosition && (
                                         <button 
                                             onClick={handleCancel}
-                                            className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
+                                            className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
                                         >
                                             취소
                                         </button>
@@ -336,7 +360,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                 <button 
                                     onClick={handlePlaceStone}
                                     disabled={!selectedPosition || (isMultiplayer && myPlayer !== currentPlayer)}
-                                    className={`px-6 py-2 rounded-md font-semibold transition ${
+                                    className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
                                         selectedPosition && (!isMultiplayer || myPlayer === currentPlayer)
                                             ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
                                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -347,7 +371,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                 {selectedPosition && (
                                     <button 
                                         onClick={handleCancel}
-                                        className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
+                                        className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
                                     >
                                         취소
                                     </button>
@@ -372,7 +396,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                     <div className="flex gap-3 justify-center">
                         <button
                             onClick={onToggleReady}
-                            className={`px-6 py-2 rounded-md font-semibold transition ${
+                            className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
                                 myPublicPlayer?.isReady
                                     ? 'bg-yellow-500 text-white hover:bg-yellow-600'
                                     : 'bg-green-500 text-white hover:bg-green-600'
@@ -386,7 +410,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                     <button
                         onClick={() => setShowLobby(!showLobby)}
                         disabled={isMultiplayer && !winner}
-                        className={`px-6 py-2 rounded-md font-semibold transition ${
+                        className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
                             isMultiplayer && !winner
                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 : isMultiplayer

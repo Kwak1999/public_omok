@@ -105,23 +105,23 @@ const RoomList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 p-8 pt-24">
+    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 p-4 sm:p-6 md:p-8 pt-20 sm:pt-24">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-neutral-700 dark:text-gray-300">
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-700 dark:text-gray-300">
               오목 공개방
             </h1>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => navigate('/')}
-                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
               >
                 홈으로
               </button>
               <button
                 onClick={handleCreateRoom}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold"
+                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold"
               >
                 방 만들기
               </button>
@@ -149,17 +149,17 @@ const RoomList = () => {
               {rooms.map((room) => (
                 <div
                   key={room.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-700 rounded-lg border border-gray-200 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-600 transition"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-neutral-700 rounded-lg border border-gray-200 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-600 transition gap-3 sm:gap-0"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                  <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
                       {room.playerCount}/2
                     </div>
-                    <div>
-                      <div className="font-semibold text-neutral-700 dark:text-gray-300">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm sm:text-base text-neutral-700 dark:text-gray-300 truncate">
                         {room.title || `방 ID: ${room.id.substring(0, 8)}...`}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         플레이어: {room.playerCount}명
                         {room.title && <span className="ml-2 text-xs">({room.id.substring(0, 8)}...)</span>}
                       </div>
@@ -168,7 +168,7 @@ const RoomList = () => {
                   <button
                     onClick={() => handleJoinRoom(room.id)}
                     disabled={room.playerCount > 2}
-                    className={`px-6 py-2 rounded-md font-semibold transition ${
+                    className={`w-full sm:w-auto px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
                       room.playerCount > 2
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-green-500 text-white hover:bg-green-600 cursor-pointer'
@@ -185,9 +185,9 @@ const RoomList = () => {
 
       {/* 방 만들기 모달 */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-            <h2 className="text-2xl font-bold text-neutral-700 dark:text-gray-300 mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 sm:p-6 max-w-md w-full shadow-xl">
+            <h2 className="text-xl sm:text-2xl font-bold text-neutral-700 dark:text-gray-300 mb-4">
               방 만들기
             </h2>
             <div className="mb-4">

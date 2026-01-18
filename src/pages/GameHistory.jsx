@@ -59,15 +59,15 @@ const GameHistory = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-20">
-      <div className="max-w-4xl mx-auto p-8">
-        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-neutral-700 dark:text-gray-300">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-700 dark:text-gray-300">
               경기 기록
             </h1>
             <button
               onClick={() => navigate('/')}
-              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+              className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-500 text-white rounded-md hover:bg-gray-600 transition w-full sm:w-auto"
             >
               홈으로
             </button>
@@ -90,35 +90,35 @@ const GameHistory = () => {
               {history.map((game) => (
                 <div
                   key={game.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-700 rounded-lg border border-gray-200 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-600 transition"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-neutral-700 rounded-lg border border-gray-200 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-600 transition gap-3 sm:gap-0"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex-1 w-full sm:w-auto">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                      <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         {formatGameDate(game.timestamp)}
                       </div>
-                      <div className="text-sm">
+                      <div className="text-xs sm:text-sm">
                         <span className="text-gray-600 dark:text-gray-300">
                           착수 수: {game.moves.length}수
                         </span>
                       </div>
                       {game.winner && (
-                        <div className="text-sm font-semibold">
+                        <div className="text-xs sm:text-sm font-semibold">
                           승자: {game.winner === 'black' ? '⚫ 흑돌' : '⚪ 백돌'}
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
                       onClick={() => handleReplay(game.id)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold"
+                      className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold"
                     >
                       복기
                     </button>
                     <button
                       onClick={(e) => handleDelete(game.id, e)}
-                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+                      className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base bg-red-500 text-white rounded-md hover:bg-red-600 transition"
                     >
                       삭제
                     </button>

@@ -62,15 +62,15 @@ const MultiplayerLobby = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 sm:p-6 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-neutral-700 dark:text-gray-300">
+          <h2 className="text-xl sm:text-2xl font-bold text-neutral-700 dark:text-gray-300">
             멀티플레이어
           </h2>
           <button
             onClick={handleDisconnect}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-xl sm:text-2xl"
           >
             ✕
           </button>
@@ -157,11 +157,11 @@ const MultiplayerLobby = ({ onClose }) => {
         ) : (
           /* 방 생성/참가 선택 */
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <button
                 onClick={handleCreateRoom}
                 disabled={!isConnected}
-                className={`px-4 py-3 rounded-md font-semibold transition ${
+                className={`px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-md font-semibold transition ${
                   isConnected
                     ? 'bg-blue-500 text-white hover:bg-blue-600'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -172,7 +172,7 @@ const MultiplayerLobby = ({ onClose }) => {
               <button
                 onClick={() => setShowJoinRoom(true)}
                 disabled={!isConnected}
-                className={`px-4 py-3 rounded-md font-semibold transition ${
+                className={`px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-md font-semibold transition ${
                   isConnected
                     ? 'bg-green-500 text-white hover:bg-green-600'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'

@@ -44,31 +44,31 @@ const Home = () => {
     
     return (
         <div className="bg-slate-100 min-h-screen dark:bg-neutral-700 pt-20">
-            <div className="max-w-4xl mx-auto p-8">
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-neutral-700 dark:text-gray-300 mb-4">
+            <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
+                <div className="text-center mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-700 dark:text-gray-300 mb-3 sm:mb-4">
                         오목 게임
                     </h1>
                     {!isLoggedIn ? (
-                        <div className="flex flex-col items-center gap-4">
-                            <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        <div className="flex flex-col items-center gap-3 sm:gap-4">
+                            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-2 px-4">
                                 게임을 시작하려면 게스트 로그인이 필요합니다.
                             </p>
                             <button
                                 onClick={handleGuestLogin}
-                                className="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition font-semibold text-lg"
+                                className="px-5 sm:px-6 py-2.5 sm:py-3 text-base sm:text-lg bg-green-500 text-white rounded-md hover:bg-green-600 transition font-semibold"
                             >
                                 게스트
                             </button>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center gap-4">
-                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <div className="flex flex-col items-center gap-3 sm:gap-4">
+                            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2 px-4 break-all">
                                 게스트 ID: <span className="font-mono">{guestId}</span>
                             </div>
                             <button
                                 onClick={handleGoToRooms}
-                                className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold text-lg"
+                                className="px-5 sm:px-6 py-2.5 sm:py-3 text-base sm:text-lg bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-semibold"
                             >
                                 공개방 입장
                             </button>

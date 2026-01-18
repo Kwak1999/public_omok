@@ -187,21 +187,21 @@ const Timer = () => {
     const whitePercentage = (whiteCurrentTime / whiteMaxTime) * 100;
 
     return (
-        <div className="w-full max-w-md mt-4">
-            <div className="space-y-3">
+        <div className="w-full max-w-md mt-2 sm:mt-4 px-4">
+            <div className="space-y-2 sm:space-y-3">
                 {/* 흑돌 타이머 */}
                 <div className="relative">
                     <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-semibold text-neutral-700 dark:text-gray-300">
+                        <span className="text-xs sm:text-sm font-semibold text-neutral-700 dark:text-gray-300">
                             ⚫ 흑돌 {blackMainTimeExhausted 
                                 ? `턴: ${formatTime(blackTurnTime)}` 
                                 : `(${formatTime(blackTime)})`}
                         </span>
                         {currentPlayer === 'black' && isMyTurn && (
-                            <span className="text-xs text-red-500 font-semibold animate-pulse">진행 중</span>
+                            <span className="text-[10px] sm:text-xs text-red-500 font-semibold animate-pulse">진행 중</span>
                         )}
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 sm:h-4 overflow-hidden">
                         <div
                             className={`h-full transition-all duration-1000 ${
                                 currentPlayer === 'black' && isMyTurn
@@ -216,16 +216,16 @@ const Timer = () => {
                 {/* 백돌 타이머 */}
                 <div className="relative">
                     <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-semibold text-neutral-700 dark:text-gray-300">
+                        <span className="text-xs sm:text-sm font-semibold text-neutral-700 dark:text-gray-300">
                             ⚪ 백돌 {whiteMainTimeExhausted 
                                 ? `턴: ${formatTime(whiteTurnTime)}` 
                                 : `(${formatTime(whiteTime)})`}
                         </span>
                         {currentPlayer === 'white' && isMyTurn && (
-                            <span className="text-xs text-red-500 font-semibold animate-pulse">진행 중</span>
+                            <span className="text-[10px] sm:text-xs text-red-500 font-semibold animate-pulse">진행 중</span>
                         )}
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 sm:h-4 overflow-hidden">
                         <div
                             className={`h-full transition-all duration-1000 ${
                                 currentPlayer === 'white' && isMyTurn
