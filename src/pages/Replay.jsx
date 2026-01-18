@@ -184,7 +184,7 @@ const Replay = () => {
               transformOrigin: 'top center',
               width: `${BOARD_LENGTH + (boardScale < 1 ? 24 / boardScale : 24)}px`,
               height: `${BOARD_LENGTH + (boardScale < 1 ? 24 / boardScale : 24)}px`,
-              marginBottom: boardScale < 1 ? `${(BOARD_LENGTH + 24) * (1 - boardScale)}px` : '0',
+              marginBottom: boardScale < 1 ? `${Math.max((BOARD_LENGTH + 24) * (1 - boardScale) - 40, 0)}px` : '0',
             }}
           >
             <div className="relative" style={{ width: BOARD_LENGTH, height: BOARD_LENGTH }}>
@@ -247,7 +247,7 @@ const Replay = () => {
           </div>
 
           {/* 복기 컨트롤 버튼 */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full px-2 -mt-1 sm:mt-0">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full px-2 -mt-8 sm:-mt-4 md:mt-0">
             <button
               onClick={handleGoToStart}
               disabled={isAtStart}
