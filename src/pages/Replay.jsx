@@ -82,10 +82,42 @@ const Replay = () => {
     }
   };
 
+  // 모바일에서 보드 크기 계산
+  const [boardScale, setBoardScale] = React.useState(1);
+  
+  React.useEffect(() => {
+    const calculateScale = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      const horizontalPadding = 32;
+      const verticalPadding = 300; // 헤더, 컨트롤 등 고려
+      
+      const availableWidth = viewportWidth - horizontalPadding;
+      const availableHeight = viewportHeight - verticalPadding;
+      
+      const boardWithPadding = BOARD_LENGTH + 24;
+      
+      const scaleByWidth = availableWidth / boardWithPadding;
+      const scaleByHeight = availableHeight / boardWithPadding;
+      
+      const scale = Math.min(scaleByWidth, scaleByHeight, 1);
+      setBoardScale(Math.max(scale, 0.5));
+    };
+    
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    window.addEventListener('orientationchange', calculateScale);
+    return () => {
+      window.removeEventListener('resize', calculateScale);
+      window.removeEventListener('orientationchange', calculateScale);
+    };
+  }, []);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-20 flex items-center justify-center">
-        <div className="text-xl text-gray-600 dark:text-gray-400">로딩 중...</div>
+      <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-16 sm:pt-20 flex items-center justify-center">
+        <div className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-400">로딩 중...</div>
       </div>
     );
   }
@@ -99,23 +131,30 @@ const Replay = () => {
   const isAtEnd = currentMoveIndex === game.moves.length;
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-20">
-      <div className="max-w-6xl mx-auto p-8">
+    <div className="min-h-screen bg-slate-100 dark:bg-neutral-700 pt-16 sm:pt-20">
+      <div className="max-w-6xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
         {/* 헤더 */}
-        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-md p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-neutral-700 dark:text-gray-300 mb-2">
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-md p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-neutral-700 dark:text-gray-300 mb-1 sm:mb-2">
                 경기 복기
               </h1>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {formatGameDate(game.timestamp)} | 총 {game.moves.length}수
-                {game.winner && ` | 승자: ${game.winner === 'black' ? '⚫ 흑돌' : '⚪ 백돌'}`}
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex flex-wrap gap-1 sm:gap-2">
+                <span>{formatGameDate(game.timestamp)}</span>
+                <span>|</span>
+                <span>총 {game.moves.length}수</span>
+                {game.winner && (
+                  <>
+                    <span>|</span>
+                    <span>승자: {game.winner === 'black' ? '⚫ 흑돌' : '⚪ 백돌'}</span>
+                  </>
+                )}
               </div>
             </div>
             <button
               onClick={() => navigate('/history')}
-              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base bg-gray-500 text-white rounded-md hover:bg-gray-600 transition w-full sm:w-auto flex-shrink-0"
             >
               목록으로
             </button>
@@ -123,22 +162,31 @@ const Replay = () => {
         </div>
 
         {/* 게임 보드 */}
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-3 sm:gap-4 md:gap-6">
           {/* 현재 상태 표시 */}
-          <div className="text-center">
-            <div className="text-lg font-semibold text-neutral-700 dark:text-gray-300 mb-2">
+          <div className="text-center px-2">
+            <div className="text-base sm:text-lg md:text-xl font-semibold text-neutral-700 dark:text-gray-300 mb-1 sm:mb-2">
               {isAtStart ? '시작 전' : `제 ${currentMoveIndex}수`}
               {currentMove && ` - ${currentMove.player === 'black' ? '⚫ 흑돌' : '⚪ 백돌'}`}
             </div>
             {isAtEnd && game.winner && (
-              <div className="text-xl font-bold text-green-600 dark:text-green-400">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">
                 🎉 {game.winner === 'black' ? '⚫ 흑돌' : '⚪ 백돌'} 승리! 🎉
               </div>
             )}
           </div>
 
           {/* 보드 */}
-          <div className="p-3 rounded-md shadow-lg bg-amber-200 border-4 border-amber-700">
+          <div 
+            className="p-1.5 sm:p-2 md:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0"
+            style={{
+              transform: `scale(${boardScale})`,
+              transformOrigin: 'top center',
+              width: `${BOARD_LENGTH + (boardScale < 1 ? 24 / boardScale : 24)}px`,
+              height: `${BOARD_LENGTH + (boardScale < 1 ? 24 / boardScale : 24)}px`,
+              marginBottom: boardScale < 1 ? `${(BOARD_LENGTH + 24) * (1 - boardScale)}px` : '0',
+            }}
+          >
             <div className="relative" style={{ width: BOARD_LENGTH, height: BOARD_LENGTH }}>
               {/* 세로줄 */}
               {Array.from({ length: BOARD_SIZE }).map((_, i) => (
@@ -199,22 +247,22 @@ const Replay = () => {
           </div>
 
           {/* 복기 컨트롤 버튼 */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full px-2 -mt-1 sm:mt-0">
             <button
               onClick={handleGoToStart}
               disabled={isAtStart}
-              className={`px-4 py-2 rounded-md font-semibold transition ${
+              className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-md font-semibold transition ${
                 isAtStart
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-gray-500 text-white hover:bg-gray-600'
               }`}
             >
-              처음으로
+              처음
             </button>
             <button
               onClick={handlePrevious}
               disabled={isAtStart}
-              className={`px-6 py-2 rounded-md font-semibold transition text-2xl ${
+              className={`px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-md font-semibold transition text-lg sm:text-xl md:text-2xl ${
                 isAtStart
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-500 text-white hover:bg-blue-600'
@@ -222,13 +270,13 @@ const Replay = () => {
             >
               &lt;
             </button>
-            <div className="px-4 py-2 bg-gray-100 dark:bg-neutral-700 rounded-md font-semibold text-neutral-700 dark:text-gray-300 min-w-[100px] text-center">
+            <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 dark:bg-neutral-700 rounded-md font-semibold text-xs sm:text-sm md:text-base text-neutral-700 dark:text-gray-300 min-w-[60px] sm:min-w-[80px] md:min-w-[100px] text-center">
               {currentMoveIndex} / {game.moves.length}
             </div>
             <button
               onClick={handleNext}
               disabled={isAtEnd}
-              className={`px-6 py-2 rounded-md font-semibold transition text-2xl ${
+              className={`px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-md font-semibold transition text-lg sm:text-xl md:text-2xl ${
                 isAtEnd
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-500 text-white hover:bg-blue-600'
@@ -239,13 +287,13 @@ const Replay = () => {
             <button
               onClick={handleGoToEnd}
               disabled={isAtEnd}
-              className={`px-4 py-2 rounded-md font-semibold transition ${
+              className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base rounded-md font-semibold transition ${
                 isAtEnd
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-gray-500 text-white hover:bg-gray-600'
               }`}
             >
-              끝으로
+              끝
             </button>
           </div>
         </div>

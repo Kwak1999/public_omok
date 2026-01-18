@@ -133,7 +133,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
         <div className="min-h-screen flex flex-col items-center bg-slate-100 dark:bg-neutral-700 pt-16 sm:pt-20 pb-4 sm:pb-8 px-2 sm:px-4 md:px-6">
             {showLobby && <MultiplayerLobby onClose={() => setShowLobby(false)} />}
             
-            <div className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-2xl flex-shrink-0">
+            <div className="flex flex-col items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 w-full max-w-2xl flex-shrink-0">
                 {/* 멀티플레이어 모드 표시 */}
                 {isMultiplayer && (
                     <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full">
@@ -256,7 +256,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 </div>
 
                 {/* 착수 버튼 영역 */}
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 -mt-1 sm:mt-0">
                     {/* 기권 버튼 - 멀티플레이어 모드이고 게임이 진행 중일 때만 표시 */}
                     {isMultiplayer && !winner && (isPlaying || isPrivateGameStarted) && (
                         <button
