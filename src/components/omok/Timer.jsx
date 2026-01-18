@@ -187,7 +187,7 @@ const Timer = () => {
     const whitePercentage = (whiteCurrentTime / whiteMaxTime) * 100;
 
     return (
-        <div className="w-full max-w-md -mt-8 sm:-mt-4 md:mt-2 px-4">
+        <div className="w-full max-w-md -mt-6 sm:mt-2 px-4">
             <div className="space-y-2 sm:space-y-3">
                 {/* 흑돌 타이머 */}
                 <div className="relative">

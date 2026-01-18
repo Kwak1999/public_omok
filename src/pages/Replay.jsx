@@ -84,11 +84,14 @@ const Replay = () => {
 
   // 모바일에서 보드 크기 계산
   const [boardScale, setBoardScale] = React.useState(1);
+  const [isMobile, setIsMobile] = React.useState(false);
   
   React.useEffect(() => {
     const calculateScale = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
+      const isMobileView = viewportWidth < 640; // sm 브레이크포인트
+      setIsMobile(isMobileView);
       
       const horizontalPadding = 32;
       const verticalPadding = 300; // 헤더, 컨트롤 등 고려
@@ -180,11 +183,19 @@ const Replay = () => {
           <div 
             className="p-1.5 sm:p-2 md:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0"
             style={{
-              transform: `scale(${boardScale})`,
+              transform: boardScale < 1 ? `scale(${boardScale})` : 'none',
               transformOrigin: 'top center',
-              width: `${BOARD_LENGTH + (boardScale < 1 ? 24 / boardScale : 24)}px`,
-              height: `${BOARD_LENGTH + (boardScale < 1 ? 24 / boardScale : 24)}px`,
-              marginBottom: boardScale < 1 ? `${Math.max((BOARD_LENGTH + 24) * (1 - boardScale) - 40, 0)}px` : '0',
+              width: boardScale < 1 
+                ? `${BOARD_LENGTH + 24 / boardScale}px` 
+                : `${BOARD_LENGTH + 24}px`,
+              height: boardScale < 1 
+                ? `${BOARD_LENGTH + 24 / boardScale}px` 
+                : `${BOARD_LENGTH + 24}px`,
+              marginBottom: boardScale < 1 && isMobile
+                ? `${Math.max((BOARD_LENGTH + 24) * (1 - boardScale) - 30, 0)}px` 
+                : boardScale < 1
+                ? `${(BOARD_LENGTH + 24) * (1 - boardScale)}px`
+                : '0',
             }}
           >
             <div className="relative" style={{ width: BOARD_LENGTH, height: BOARD_LENGTH }}>
@@ -247,7 +258,7 @@ const Replay = () => {
           </div>
 
           {/* 복기 컨트롤 버튼 */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full px-2 -mt-8 sm:-mt-4 md:mt-0">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full px-2 -mt-6 sm:mt-0">
             <button
               onClick={handleGoToStart}
               disabled={isAtStart}

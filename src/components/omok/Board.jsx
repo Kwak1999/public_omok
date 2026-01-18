@@ -92,11 +92,14 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
 
     // 모바일에서 보드 크기 계산 (화면 너비와 높이를 모두 고려)
     const [boardScale, setBoardScale] = React.useState(1);
+    const [isMobile, setIsMobile] = React.useState(false);
     
     React.useEffect(() => {
         const calculateScale = () => {
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
+            const isMobileView = viewportWidth < 640; // sm 브레이크포인트
+            setIsMobile(isMobileView);
             
             // 패딩과 여유 공간 고려 (좌우 패딩 16px * 2 + 보드 테두리 8px * 2)
             const horizontalPadding = 32; // 좌우 패딩
@@ -194,12 +197,18 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 <div 
                     className="p-1.5 sm:p-2 md:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0"
                     style={{
-                        transform: `scale(${boardScale})`,
+                        transform: boardScale < 1 ? `scale(${boardScale})` : 'none',
                         transformOrigin: 'top center',
-                        width: `${BOARD_LENGTH + (boardScale < 1 ? 16 / boardScale : 16)}px`,
-                        height: `${BOARD_LENGTH + (boardScale < 1 ? 16 / boardScale : 16)}px`,
-                        marginBottom: boardScale < 1 
-                            ? `${Math.max((BOARD_LENGTH + 16) * (1 - boardScale) - 40, 0)}px` 
+                        width: boardScale < 1 
+                            ? `${BOARD_LENGTH + 16 / boardScale}px` 
+                            : `${BOARD_LENGTH + 16}px`,
+                        height: boardScale < 1 
+                            ? `${BOARD_LENGTH + 16 / boardScale}px` 
+                            : `${BOARD_LENGTH + 16}px`,
+                        marginBottom: boardScale < 1 && isMobile
+                            ? `${Math.max((BOARD_LENGTH + 16) * (1 - boardScale) - 30, 0)}px` 
+                            : boardScale < 1
+                            ? `${(BOARD_LENGTH + 16) * (1 - boardScale)}px`
                             : '0',
                     }}
                 >
@@ -258,7 +267,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 </div>
 
                 {/* 착수 버튼 영역 */}
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 -mt-8 sm:-mt-4 md:mt-0">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 -mt-6 sm:mt-0">
                     {/* 기권 버튼 - 멀티플레이어 모드이고 게임이 진행 중일 때만 표시 */}
                     {isMultiplayer && !winner && (isPlaying || isPrivateGameStarted) && (
                         <button
