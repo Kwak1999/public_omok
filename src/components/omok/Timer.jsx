@@ -186,8 +186,25 @@ const Timer = () => {
     const whiteMaxTime = whiteMainTimeExhausted ? TURN_TIME : MAIN_TIME;
     const whitePercentage = (whiteCurrentTime / whiteMaxTime) * 100;
 
+    // 모바일 여부 확인 (화면 너비 기준)
+    const [isMobile, setIsMobile] = React.useState(false);
+    
+    React.useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     return (
-        <div className="w-full max-w-md -mt-6 sm:mt-2 px-4">
+        <div 
+            className="w-full max-w-md px-4 relative z-10"
+            style={{
+                marginTop: isMobile ? '-20px' : '8px',
+            }}
+        >
             <div className="space-y-2 sm:space-y-3">
                 {/* 흑돌 타이머 */}
                 <div className="relative">

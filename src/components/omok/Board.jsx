@@ -93,6 +93,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
     // 모바일에서 보드 크기 계산 (화면 너비와 높이를 모두 고려)
     const [boardScale, setBoardScale] = React.useState(1);
     const [isMobile, setIsMobile] = React.useState(false);
+    const [boardPadding, setBoardPadding] = React.useState(12); // 기본 패딩 (md 이상: 12px)
     
     React.useEffect(() => {
         const calculateScale = () => {
@@ -100,6 +101,16 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
             const viewportHeight = window.innerHeight;
             const isMobileView = viewportWidth < 640; // sm 브레이크포인트
             setIsMobile(isMobileView);
+            
+            // 화면 크기에 따른 패딩 설정 (Tailwind 브레이크포인트 기준)
+            // p-1.5 = 6px (모바일), p-2 = 8px (sm), p-3 = 12px (md)
+            if (viewportWidth >= 768) {
+                setBoardPadding(12); // md 이상: 12px
+            } else if (viewportWidth >= 640) {
+                setBoardPadding(8); // sm: 8px
+            } else {
+                setBoardPadding(6); // 모바일: 6px
+            }
             
             // PC에서는 스케일을 적용하지 않음
             if (!isMobileView) {
@@ -115,7 +126,8 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
             const availableWidth = Math.max(viewportWidth - horizontalPadding * 2, 120); // 최소 120px 보장
             const availableHeight = Math.max(viewportHeight - verticalPadding, 250); // 최소 250px 보장
             
-            const boardWithPadding = BOARD_LENGTH + 16; // 보드 + 내부 패딩
+            const currentPadding = 6; // 모바일 패딩
+            const boardWithPadding = BOARD_LENGTH + currentPadding * 2; // 보드 + 내부 패딩
             
             const scaleByWidth = availableWidth / boardWithPadding;
             const scaleByHeight = availableHeight / boardWithPadding;
@@ -139,7 +151,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
         <div className="min-h-screen flex flex-col items-center bg-slate-100 dark:bg-neutral-700 pt-[60px] sm:pt-[70px] md:pt-[80px] pb-4 sm:pb-8 px-2 sm:px-4 md:px-6">
             {showLobby && <MultiplayerLobby onClose={() => setShowLobby(false)} />}
             
-            <div className="flex flex-col items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 w-full max-w-2xl flex-shrink-0">
+            <div className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-2xl flex-shrink-0">
                 {/* 멀티플레이어 모드 표시 */}
                 {isMultiplayer && (
                     <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full">
@@ -197,63 +209,73 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 )}
 
                 {/* 보드 목재 배경 + 테두리 */}
-                <div 
-                    className="p-1.5 sm:p-2 md:p-3 rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0 inline-block"
+                <div
+                    className="rounded-md shadow-lg bg-amber-200 border-2 sm:border-4 border-amber-700 flex-shrink-0 inline-block relative z-0"
                     style={{
-                        transform: isMobile && boardScale < 1 ? `scale(${boardScale})` : 'none',
-                        transformOrigin: 'top center',
-                        width: isMobile && boardScale < 1 
-                            ? `${BOARD_LENGTH + 16 / boardScale}px` 
-                            : `${BOARD_LENGTH + 16}px`,
-                        height: isMobile && boardScale < 1 
-                            ? `${BOARD_LENGTH + 16 / boardScale}px` 
-                            : `${BOARD_LENGTH + 16}px`,
-                        marginBottom: isMobile && boardScale < 1
-                            ? `${Math.max((BOARD_LENGTH + 16) * (1 - boardScale) - 30, 0)}px` 
-                            : '0',
+                        // ✅ 683 기준 비율로 항상 스케일링
+                        //   - 기존 boardScale(모바일 전용)을 "전체"에도 적용되게 확장
+                        transform: `scale(${Math.min(boardScale, 1)})`,
+                        transformOrigin: "top center",
+                        padding: `${CELL_GAP}px`,
+
+                        // ✅ 격자선 간격을 일정하게 하기 위해 CELL_GAP 패딩 사용
+                        width: `${(BOARD_LENGTH + CELL_GAP * 2) / Math.min(boardScale, 1)}px`,
+                        height: `${(BOARD_LENGTH + CELL_GAP * 2) / Math.min(boardScale, 1)}px`,
+
+                        // 기존 marginBottom 로직은 유지
+                        marginBottom:
+                            boardScale < 1
+                                ? `${Math.max((BOARD_LENGTH + CELL_GAP * 2) * (1 - boardScale) + 50, 50)}px`
+                                : "16px",
                     }}
                 >
-                    {/* 실제 보드 크기 */}
-                    <div className="relative" style={{width: BOARD_LENGTH, height: BOARD_LENGTH}}>
-                        {/* 세로줄 15개 */}
-                        {Array.from({length: BOARD_SIZE}).map((_, i) => (
+                    {/* 실제 보드 크기 - 격자선이 일정한 간격을 갖도록 */}
+                    <div 
+                        className="relative" 
+                        style={{ 
+                            width: BOARD_LENGTH, 
+                            height: BOARD_LENGTH
+                        }}
+                    >
+                        {/* 세로줄 15개 (픽셀 기반 - 일정한 간격) */}
+                        {Array.from({ length: BOARD_SIZE }).map((_, i) => (
                             <div
                                 key={`v-${i}`}
                                 className="absolute bg-amber-800"
                                 style={{
-                                    left: i * CELL_GAP, 
-                                    top: 0, 
-                                    width: 1, 
+                                    left: i * CELL_GAP,
+                                    top: 0,
+                                    width: 1,
                                     height: BOARD_LENGTH,
                                 }}
                             />
                         ))}
-                        
-                        {/* 가로줄 15개 */}
+
+                        {/* 가로줄 15개 (픽셀 기반 - 일정한 간격) */}
                         {Array.from({ length: BOARD_SIZE }).map((_, i) => (
                             <div
                                 key={`h-${i}`}
                                 className="absolute bg-amber-800"
                                 style={{
-                                    left: 0, 
-                                    top: i * CELL_GAP, 
-                                    width: BOARD_LENGTH, 
+                                    left: 0,
+                                    top: i * CELL_GAP,
+                                    width: BOARD_LENGTH,
                                     height: 1,
                                 }}
                             />
                         ))}
 
-                        {/* 성혈 5개 */}
-                        {STAR_POSITIONS.map(({row, col}, idx) => (
+                        {/* 성혈 5개 (픽셀 기반 - 유지보수 용이) */}
+                        {STAR_POSITIONS.map(({ row, col }, idx) => (
                             <span
                                 key={idx}
-                                className='absolute rounded-full bg-amber-800'
+                                className="absolute rounded-full bg-amber-800"
                                 style={{
-                                    width: 8, 
+                                    width: 8,
                                     height: 8,
-                                    left: col * CELL_GAP - 4,  // 점의 중심이 교차점에 오도록 -반지름
+                                    left: col * CELL_GAP - 4,
                                     top: row * CELL_GAP - 4,
-                                    pointerEvents: 'none',
+                                    pointerEvents: "none",
                                 }}
                             />
                         ))}
@@ -268,7 +290,14 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 </div>
 
                 {/* 착수 버튼 영역 */}
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 -mt-6 sm:mt-0">
+                <div 
+                    className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 relative z-10"
+                    style={{
+                        marginTop: isMobile && boardScale < 1 
+                            ? `${Math.max(-((BOARD_LENGTH + 12) * (1 - boardScale)) + 30, -20)}px`
+                            : '0px',
+                    }}
+                >
                     {/* 기권 버튼 - 멀티플레이어 모드이고 게임이 진행 중일 때만 표시 */}
                     {isMultiplayer && !winner && (isPlaying || isPrivateGameStarted) && (
                         <button

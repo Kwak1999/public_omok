@@ -22,8 +22,8 @@ const Navbar = ({darkMode, setDarkMode}) => {
     const isGameInProgress = isMultiplayer && !winner && (hasStonesOnBoard || roomStatus === 'playing');
     
     return (
-        <nav className='w-screen h-[60px] sm:h-[70px] md:h-[80px] z-10 bg-zinc-200 fixed drop-shadow-lg dark:bg-neutral-800'>
-            <div className='flex items-center justify-between w-full h-full px-3 sm:px-4 md:px-6 lg:px-10'>
+        <nav className='w-screen h-[60px] sm:h-[70px] md:h-[80px] z-10 bg-zinc-200 sticky top-0 drop-shadow-lg dark:bg-neutral-800'>
+        <div className='flex items-center justify-between w-full h-full px-3 sm:px-4 md:px-6 lg:px-10'>
                 <div className='flex items-center'>
                     <h1 
                         className='mr-2 sm:mr-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-neutral-700 dark:text-gray-300'
