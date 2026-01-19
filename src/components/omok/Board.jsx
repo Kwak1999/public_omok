@@ -250,7 +250,6 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                             style={{
                                 width: outerSize,
                                 height: outerSize,
-                                marginBottom: scale < 1 ? Math.max(outerSize * (1 - scale) + 50, 50) : 16,
                             }}
                         >
                             {/* ✅ [시각 박스]: scale만 적용 */}
@@ -260,6 +259,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                     // ✅ border는 state 값으로 관리 (리렌더링 시 업데이트)
                                     borderStyle: "solid",
                                     borderWidth: borderPx,
+                                
 
                                     // ✅ padding도 state 값으로 통일 (모든 모서리 동일)
                                     padding: boardPadding,
@@ -329,7 +329,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 })()}
 
                 {/* 착수 버튼 영역 */}
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 relative z-10 -mt-6 sm:mt-0">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 relative z-10 mt-4">
                     {/* 기권 버튼 - 멀티플레이어 모드이고 게임이 진행 중일 때만 표시 */}
                     {isMultiplayer && !winner && (isPlaying || isPrivateGameStarted) && (
                         <button

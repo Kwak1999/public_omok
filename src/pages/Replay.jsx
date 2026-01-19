@@ -206,7 +206,6 @@ const Replay = () => {
                         style={{
                             width: outerSize,
                             height: outerSize,
-                            marginBottom: scale < 1 ? Math.max(outerSize * (1 - scale) + 50, 50) : 16,
                         }}
                     >
                         {/* ✅ [시각 박스] : 여기만 scale */}
@@ -299,7 +298,7 @@ const Replay = () => {
             })()}
 
             {/* 복기 컨트롤 버튼 */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full px-2 -mt-6 sm:mt-0">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full px-2 mt-4">
             <button
               onClick={handleGoToStart}
               disabled={isAtStart}
