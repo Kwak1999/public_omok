@@ -329,14 +329,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 })()}
 
                 {/* 착수 버튼 영역 */}
-                <div 
-                    className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 relative z-10"
-                    style={{
-                        marginTop: isMobile && boardScale < 1 
-                            ? `${Math.max(-((BOARD_LENGTH + 12) * (1 - boardScale)) + 30, -20)}px`
-                            : '0px',
-                    }}
-                >
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 relative z-10 -mt-6 sm:mt-0">
                     {/* 기권 버튼 - 멀티플레이어 모드이고 게임이 진행 중일 때만 표시 */}
                     {isMultiplayer && !winner && (isPlaying || isPrivateGameStarted) && (
                         <button
