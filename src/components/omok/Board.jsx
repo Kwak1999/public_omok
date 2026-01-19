@@ -91,15 +91,22 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
     };
 
     // 모바일에서 보드 크기 계산 (화면 너비와 높이를 모두 고려)
+    // 초기값을 안전하게 설정 (모바일로 가정)
     const [boardScale, setBoardScale] = React.useState(1);
-    const [isMobile, setIsMobile] = React.useState(false);
-    const [boardPadding, setBoardPadding] = React.useState(12); // 기본 패딩 (md 이상: 12px)
-    const [borderPx, setBorderPx] = React.useState(4); // 기본 border (sm 이상: 4px)
+    const [isMobile, setIsMobile] = React.useState(true); // 초기값을 모바일로 가정
+    const [boardPadding, setBoardPadding] = React.useState(6); // 초기값을 모바일 패딩으로 설정
+    const [borderPx, setBorderPx] = React.useState(2); // 초기값을 모바일 border로 설정
+    const [isCalculated, setIsCalculated] = React.useState(false); // 계산 완료 여부
     
     React.useEffect(() => {
         const calculateScale = () => {
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
+            // 뷰포트가 준비될 때까지 대기
+            if (typeof window === 'undefined' || !window.innerWidth) {
+                return;
+            }
+            
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 375;
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 667;
             const isMobileView = viewportWidth < 640; // sm 브레이크포인트
             setIsMobile(isMobileView);
             
@@ -119,6 +126,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
             // PC에서는 스케일을 적용하지 않음
             if (!isMobileView) {
                 setBoardScale(1);
+                setIsCalculated(true);
                 return;
             }
             
@@ -139,12 +147,28 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
             // 더 작은 스케일을 선택하되, 최소 0.35 (35%)로 제한하여 보드가 너무 작아지지 않도록
             const scale = Math.min(scaleByWidth, scaleByHeight, 1);
             setBoardScale(Math.max(scale, 0.35)); // 최소 35% 스케일
+            setIsCalculated(true);
         };
         
+        // 즉시 계산 시도
         calculateScale();
+        
+        // DOM이 완전히 로드된 후 다시 계산 (일부 브라우저에서 필요)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', calculateScale);
+        }
+        
+        // 약간의 지연 후 다시 계산 (뷰포트가 안정화될 때까지)
+        const timeoutId = setTimeout(calculateScale, 100);
+        
         window.addEventListener('resize', calculateScale);
-        window.addEventListener('orientationchange', calculateScale);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(calculateScale, 100); // orientationchange 후 뷰포트가 안정화될 때까지 대기
+        });
+        
         return () => {
+            clearTimeout(timeoutId);
+            document.removeEventListener('DOMContentLoaded', calculateScale);
             window.removeEventListener('resize', calculateScale);
             window.removeEventListener('orientationchange', calculateScale);
         };
