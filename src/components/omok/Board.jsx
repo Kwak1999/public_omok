@@ -94,6 +94,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
     const [boardScale, setBoardScale] = React.useState(1);
     const [isMobile, setIsMobile] = React.useState(false);
     const [boardPadding, setBoardPadding] = React.useState(12); // 기본 패딩 (md 이상: 12px)
+    const [borderPx, setBorderPx] = React.useState(4); // 기본 border (sm 이상: 4px)
     
     React.useEffect(() => {
         const calculateScale = () => {
@@ -111,6 +112,9 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
             } else {
                 setBoardPadding(6); // 모바일: 6px
             }
+            
+            // 화면 크기에 따른 border 설정 (border-2, sm:border-4)
+            setBorderPx(viewportWidth >= 640 ? 4 : 2);
             
             // PC에서는 스케일을 적용하지 않음
             if (!isMobileView) {
@@ -210,18 +214,16 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
 
                 {/* 보드 목재 배경 + 테두리 */}
                 {(() => {
-                    // border-2, sm:border-4 기준 (md도 sm와 동일하게 4px)
-                    const borderPx = window.innerWidth >= 640 ? 4 : 2; // sm 이상 4, 그 외 2
                     const scale = Math.min(boardScale, 1);
 
-                    // ✅ padding + border까지 포함한 “바깥 박스의 실제 크기”
+                    // ✅ padding + border까지 포함한 "바깥 박스의 실제 크기"
                     const outerSize = BOARD_LENGTH + boardPadding * 2 + borderPx * 2;
 
                     return (
                         <div
                             className="rounded-md shadow-lg bg-amber-200 border-amber-700 flex-shrink-0 inline-block relative z-0"
                             style={{
-                                // ✅ border는 px로 직접 지정 (border-3 문제 제거)
+                                // ✅ border는 state 값으로 관리 (리렌더링 시 업데이트)
                                 borderStyle: "solid",
                                 borderWidth: borderPx,
 
