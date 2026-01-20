@@ -1,3 +1,37 @@
+<!--<!doctype html>-->
+<!--<html lang="ko">-->
+<!--    <head>-->
+<!--        <meta charset="UTF-8" />-->
+
+<!--        &lt;!&ndash; Google Search Console 인증 &ndash;&gt;-->
+<!--        <meta-->
+<!--                name="google-site-verification"-->
+<!--                content="OT7kY6EZ__OjTlwqH24ov73Z-w-8cvphrlrRfg5xVRQ"-->
+<!--        />-->
+
+<!--        &lt;!&ndash; SEO 기본 &ndash;&gt;-->
+<!--        <title>온라인 오목 대국 | Strategia Mok</title>-->
+
+<!--        <meta-->
+<!--                name="description"-->
+<!--                content="Strategia Mok은 실시간 온라인 오목 대국이 가능한 웹 서비스입니다. 방 생성, 멀티플레이 대국, 전략적인 오목 플레이를 즐겨보세요."-->
+<!--        />-->
+
+<!--        <meta name="robots" content="index, follow" />-->
+
+<!--        &lt;!&ndash; 모바일 &ndash;&gt;-->
+<!--        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />-->
+
+<!--        &lt;!&ndash; 파비콘 &ndash;&gt;-->
+<!--        <link rel="icon" type="image/svg+xml" href="/vite.svg" />-->
+<!--    </head>-->
+
+<!--    <body>-->
+<!--        <div id="root"></div>-->
+<!--        <script type="module" src="/src/main.jsx"></script>-->
+<!--    </body>-->
+<!--</html>-->
+
 <!doctype html>
 <html lang="ko">
     <head>
@@ -20,9 +54,30 @@
         <meta name="robots" content="index, follow" />
 
         <!-- 모바일 -->
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        />
 
-        <!-- 파비콘 -->
+        <!-- 🔥 Open Graph (검색 + SNS 핵심) -->
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Strategia Mok" />
+        <meta property="og:title" content="온라인 오목 대국 | Strategia Mok" />
+        <meta
+                property="og:description"
+                content="실시간 온라인 오목 대국 서비스. 친구와 멀티플레이로 전략적인 오목을 즐겨보세요."
+        />
+        <meta property="og:url" content="https://api.strategia-mok.store/" />
+
+        <!-- ⭐ 반드시 실제 이미지 파일이 존재해야 함 -->
+        <meta
+                property="og:image"
+                content="https://api.strategia-mok.store/og-image.png"
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+
+        <!-- 파비콘 (vite 기본 ❌ → 교체 권장) -->
         <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     </head>
 
