@@ -44,7 +44,7 @@ if (NODE_ENV === 'production') {
   // dist 폴더 경로 (server 폴더의 상위 디렉토리의 dist)
   const distPath = join(__dirname, '..', 'dist');
   
-  // 정적 파일 서빙 (assets, vite.svg 등)
+  // 정적 파일 서빙 (assets, logo.svg 등)
   app.use(express.static(distPath, {
     maxAge: '1y', // 캐시 설정
     etag: true,

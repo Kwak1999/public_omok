@@ -39,8 +39,8 @@ server {
         access_log off;
     }
 
-    location /vite.svg {
-        alias /root/omok/public_omok/dist/vite.svg;
+    location /logo.svg {
+        alias /root/omok/public_omok/dist/logo.svg;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
