@@ -244,33 +244,29 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                     const outerSize = BOARD_LENGTH + boardPadding * 2 + borderPx * 2;
 
                     return (
-                        // ✅ [레이아웃 박스]: 고정 크기 (클리핑 방지)
                         <div
-                            className="flex-shrink-0"
+                            className="rounded-md shadow-lg bg-amber-200 border-amber-700 flex-shrink-0 inline-block relative z-0"
                             style={{
-                                width: outerSize,
-                                height: outerSize,
+                                // ✅ border는 state 값으로 관리 (리렌더링 시 업데이트)
+                                borderStyle: "solid",
+                                borderWidth: borderPx,
+
+                                // ✅ padding도 state 값으로 통일 (모든 모서리 동일)
+                                padding: boardPadding,
+
+                                transform: `scale(${scale})`,
+                                transformOrigin: "top center",
+
+                                // ✅ scale 보정도 outerSize 기준으로 정확히
+                                width: `${outerSize / scale}px`,
+                                height: `${outerSize / scale}px`,
+
+                                marginBottom:
+                                    scale < 1
+                                        ? `${Math.max(outerSize * (1 - scale) + 50, 50)}px`
+                                        : "16px",
                             }}
                         >
-                            {/* ✅ [시각 박스]: scale만 적용 */}
-                            <div
-                                className="rounded-md shadow-lg bg-amber-200 border-amber-700 inline-block relative z-0"
-                                style={{
-                                    // ✅ border는 state 값으로 관리 (리렌더링 시 업데이트)
-                                    borderStyle: "solid",
-                                    borderWidth: borderPx,
-                                
-
-                                    // ✅ padding도 state 값으로 통일 (모든 모서리 동일)
-                                    padding: boardPadding,
-
-                                    transform: `scale(${scale})`,
-                                    transformOrigin: "top center",
-
-                                    width: outerSize,
-                                    height: outerSize,
-                                }}
-                            >
                             {/* 실제 보드 크기 */}
                             <div className="relative" style={{ width: BOARD_LENGTH, height: BOARD_LENGTH }}>
                                 {/* 세로줄 */}
@@ -324,12 +320,18 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                 )}
                             </div>
                         </div>
-                    </div>
                     );
                 })()}
 
                 {/* 착수 버튼 영역 */}
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 relative z-10 mt-4">
+                <div 
+                    className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 relative z-10"
+                    style={{
+                        marginTop: isMobile && boardScale < 1 
+                            ? `${Math.max(-((BOARD_LENGTH + 12) * (1 - boardScale)) + 30, -20)}px`
+                            : '0px',
+                    }}
+                >
                     {/* 기권 버튼 - 멀티플레이어 모드이고 게임이 진행 중일 때만 표시 */}
                     {isMultiplayer && !winner && (isPlaying || isPrivateGameStarted) && (
                         <button
