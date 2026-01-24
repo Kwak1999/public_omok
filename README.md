@@ -1,12 +1,12 @@
 # 🎮 오목 게임 (Omok Game)
 
-React와 Socket.io를 활용한 실시간 멀티플레이어 오목 게임입니다. 싱글플레이어와 멀티플레이어 모드를 지원하며, 렌주룰(連珠ルール)을 적용한 정식 오목 규칙을 구현했습니다.
+React와 Socket.io를 활용한 실시간 멀티플레이어 오목 게임입니다. 싱글플레이어와 멀티플레이어 모드를 지원하며, 렌주룰을 적용한 정식 오목 규칙을 구현했습니다.
 
 ![오목 게임](https://img.shields.io/badge/React-19.1.1-blue) ![Socket.io](https://img.shields.io/badge/Socket.io-4.8.3-green) ![Node.js](https://img.shields.io/badge/Node.js-16+-brightgreen)
 
 ## 🌐 배포 사이트
 
-**🔗 [https://api.strategia-mok.store](https://api.strategia-mok.store)**
+**🔗 [https://strategia-mok.store](https://strategia-mok.store)**
 
 ## ✨ 주요 기능
 
