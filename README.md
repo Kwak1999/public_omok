@@ -465,7 +465,6 @@ sudo tail -f /var/log/nginx/error.log  # 에러 로그
 
 ## 📚 추가 문서
 
-- [멀티플레이어 가이드](./README_MULTIPLAYER.md) - 멀티플레이어 기능 상세 설명
 - [EC2 배포 가이드](./server/EC2_DEPLOY.md) - AWS EC2 배포 방법
 - [서버 문서](./server/README.md) - 백엔드 서버 상세 설명
 
