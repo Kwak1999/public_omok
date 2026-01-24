@@ -2,7 +2,11 @@
 
 React와 Socket.io를 활용한 실시간 멀티플레이어 오목 게임입니다. 싱글플레이어와 멀티플레이어 모드를 지원하며, 렌주룰(連珠ルール)을 적용한 정식 오목 규칙을 구현했습니다.
 
-![오목 게임](https://img.shields.io/badge/React-19.1.1-blue) ![Socket.io](https://img.shields.io/badge/Socket.io-4.8.3-green) ![Node.js](https://img.shields.io/badge/Node.js-16+-brightgreen) ![Docker](https://img.shields.io/badge/Docker-Ready-blue)
+![오목 게임](https://img.shields.io/badge/React-19.1.1-blue) ![Socket.io](https://img.shields.io/badge/Socket.io-4.8.3-green) ![Node.js](https://img.shields.io/badge/Node.js-16+-brightgreen)
+
+## 🌐 배포 사이트
+
+**🔗 [https://api.strategia-mok.store](https://api.strategia-mok.store)**
 
 ## ✨ 주요 기능
 
@@ -74,12 +78,13 @@ React와 Socket.io를 활용한 실시간 멀티플레이어 오목 게임입니
 - **Socket.io 4.7.2** - WebSocket 통신
 - **Better-SQLite3 12.6.0** - 데이터베이스
 - **CORS 2.8.5** - Cross-Origin 리소스 공유
+- **Dotenv 16.4.7** - 환경 변수 관리
 
 ### 배포
-- **Docker** - 컨테이너화 지원
-- **Docker Compose** - 다중 컨테이너 오케스트레이션
+- **AWS EC2** - 서버 호스팅
 - **PM2** - 프로세스 관리
-- **Nginx** - 리버스 프록시 (선택사항)
+- **Nginx** - 리버스 프록시 및 정적 파일 서빙
+- **Let's Encrypt** - SSL/TLS 인증서
 
 ## 📁 프로젝트 구조
 
@@ -100,7 +105,7 @@ public_omok/
 │   │   ├── PublicRoom.jsx       # 공개방 페이지
 │   │   ├── GameHistory.jsx      # 경기 기록 페이지
 │   │   └── Replay.jsx           # 경기 복기 페이지
-│   ├── hooks/                   # 커스텀 훅
+│   ├── hooks/                    # 커스텀 훅
 │   │   └── omok/
 │   │       ├── useOmokGame.js   # 게임 로직 훅
 │   │       ├── useRenjuRule.js  # 렌주룰 체크 훅
@@ -115,27 +120,59 @@ public_omok/
 │       ├── checkWinner.js       # 승리 체크 로직
 │       ├── guestAuth.js         # 게스트 인증
 │       └── gameHistory.js       # 경기 기록 관리
-├── server/                       # 백엔드 서버
-│   ├── server.js                # 서버 메인 파일
+│
+├── server/                       # 백엔드 서버 (모듈화된 구조)
+│   ├── server.js                # 서버 메인 파일 (49줄)
 │   ├── database.js              # 데이터베이스 로직
+│   │
+│   ├── config/                   # 설정
+│   │   └── environment.js       # 환경 변수 관리
+│   │
+│   ├── middleware/               # 미들웨어
+│   │   └── staticFiles.js       # 정적 파일 서빙
+│   │
+│   ├── routes/                   # HTTP API 라우트
+│   │   ├── index.js             # 라우트 통합
+│   │   ├── rooms.js             # 공개방 API
+│   │   └── gameHistory.js       # 경기 기록 API
+│   │
+│   ├── socket/                   # Socket.IO
+│   │   ├── index.js             # Socket.IO 초기화
+│   │   └── handlers/            # 이벤트 핸들러
+│   │       ├── index.js         # 핸들러 통합
+│   │       ├── roomHandlers.js  # 방 생성/참가/나가기
+│   │       ├── gameHandlers.js  # 착수/기권/리셋
+│   │       ├── lobbyHandlers.js # 로비/Ready/Start
+│   │       └── connectionHandlers.js  # 연결/해제
+│   │
+│   ├── game/                     # 게임 로직
+│   │   ├── board.js             # 보드 생성
+│   │   ├── winner.js            # 승리 체크
+│   │   └── renju.js             # 렌주룰
+│   │
+│   ├── services/                 # 서비스
+│   │   └── roomManager.js       # 메모리 방 관리
+│   │
+│   ├── data/                     # 데이터베이스 (Git 제외)
+│   │   └── omok.db              # SQLite 데이터베이스
+│   │
 │   ├── ecosystem.config.js      # PM2 설정
+│   ├── nginx-omok.conf          # Nginx 설정 파일
 │   ├── EC2_DEPLOY.md            # EC2 배포 가이드
-│   ├── DEPLOY.md                 # 서버 배포 가이드
-│   ├── DOCKER_DEPLOY.md         # Docker 배포 가이드
-│   └── data/                    # 데이터베이스 파일 (Git에서 제외)
-│       └── omok.db              # SQLite 데이터베이스
+│   └── README.md                # 서버 문서
+│
 ├── dist/                         # 빌드 결과물 (프론트엔드)
-├── Dockerfile                    # 프론트엔드 Dockerfile
-├── docker-compose.yml           # Docker Compose 설정
-├── nginx.conf                    # Nginx 설정 (프론트엔드)
+├── public/                       # 정적 파일
+│   ├── og-image.png             # Open Graph 이미지
+│   ├── robots.txt               # 검색 엔진 크롤러 설정
+│   └── sitemap.xml              # 사이트맵
+│
+├── index.html                    # HTML 엔트리 포인트
 ├── package.json                  # 프론트엔드 의존성
 ├── vite.config.js               # Vite 설정
 ├── tailwind.config.js           # Tailwind 설정
 ├── .gitignore                   # Git 제외 파일 목록
-├── DEPLOY.md                     # 전체 배포 가이드
-├── DEPLOY_S3.md                  # S3 배포 가이드
-├── DOCKER.md                     # Docker 배포 가이드
-├── README_MULTIPLAYER.md         # 멀티플레이어 가이드
+├── README_MULTIPLAYER.md        # 멀티플레이어 가이드
 └── README.md                     # 프로젝트 문서
 ```
 
@@ -145,7 +182,6 @@ public_omok/
 
 - **Node.js** v16 이상
 - **npm** v8 이상
-- (선택) **Docker** 및 **Docker Compose** (Docker 배포 시)
 
 ### 설치 및 실행
 
@@ -170,7 +206,35 @@ npm install
 cd ..
 ```
 
-#### 4. 개발 서버 실행
+#### 4. 환경 변수 설정
+
+**프론트엔드 (.env)**
+```bash
+# .env.example을 복사하여 .env 파일 생성
+cp .env.example .env
+```
+
+`.env` 내용:
+```env
+VITE_SERVER_URL=http://localhost:3001
+```
+
+**백엔드 (server/.env)**
+```bash
+cd server
+# .env.example을 복사하여 .env 파일 생성
+cp .env.example .env
+```
+
+`server/.env` 내용:
+```env
+PORT=3001
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:5173
+RESET_DB_ON_START=true
+```
+
+#### 5. 개발 서버 실행
 
 **터미널 1: 백엔드 서버**
 ```bash
@@ -185,26 +249,11 @@ npm run dev
 npm run dev
 ```
 
-프론트엔드가 `http://localhost:5173` (또는 다른 포트)에서 실행됩니다.
+프론트엔드가 `http://localhost:5173`에서 실행됩니다.
 
-#### 5. 브라우저에서 접속
+#### 6. 브라우저에서 접속
 
 브라우저에서 `http://localhost:5173`을 열어 게임을 시작하세요.
-
-### Docker를 사용한 실행
-
-```bash
-# 전체 스택 실행 (프론트엔드 + 백엔드)
-docker-compose up -d
-
-# 로그 확인
-docker-compose logs -f
-
-# 중지
-docker-compose down
-```
-
-자세한 내용은 [DOCKER.md](./DOCKER.md)를 참고하세요.
 
 ## 🎮 사용 방법
 
@@ -221,15 +270,6 @@ docker-compose down
 3. 5목을 먼저 만드는 플레이어가 승리합니다
 4. 흑돌에는 렌주룰이 적용됩니다 (3-3, 4-4, 6목 금지)
 5. 각 플레이어에게 40초의 메인 타이머가 주어지며, 소진 후 20초씩 초읽기 구간으로 전환됩니다
-
-### 멀티플레이어 모드 (비공개 방)
-
-1. 게임 보드에서 **"멀티플레이어 시작"** 버튼 클릭
-2. **"방 만들기"** 클릭하여 새 방 생성
-3. 생성된 방 ID를 복사하여 상대방에게 공유
-4. 상대방이 **"방 참가"**를 클릭하고 방 ID 입력
-5. 두 플레이어가 모두 준비되면 게임 시작
-6. 타이머는 각 플레이어 독립적으로 작동합니다
 
 ### 공개방 모드
 
@@ -280,12 +320,6 @@ docker-compose down
 
 백돌에는 제약이 없으며, 모든 수를 둘 수 있습니다.
 
-### 금수 예시
-
-- **3-3**: 한 수로 열린 3이 2개 생기는 경우
-- **4-4**: 한 수로 열린 4가 2개 생기는 경우
-- **6목**: 6개 이상 연속으로 만드는 경우
-
 ## 🔧 개발
 
 ### 빌드
@@ -303,72 +337,19 @@ npm run build
 npm run lint
 ```
 
-### 환경 변수
+### 서버 코드 구조
 
-> **보안 주의**: `.env` 파일은 Git에 올라가지 않습니다. `.env.example`에는 **개발 환경용 기본값만** 포함되어 있으며, 프로덕션 환경의 실제 값은 포함되지 않습니다.
+백엔드 서버는 **모듈화된 구조**로 리팩토링되었습니다:
 
-#### 프론트엔드
+- **server.js** (49줄): 메인 진입점
+- **config/**: 환경 변수 관리
+- **middleware/**: 정적 파일 서빙 등
+- **routes/**: HTTP API 라우트
+- **socket/**: Socket.IO 이벤트 핸들러
+- **game/**: 게임 로직 (보드, 승리 체크, 렌주룰)
+- **services/**: 비즈니스 로직 (방 관리)
 
-**개발 환경 (로컬):**
-```bash
-# .env.example을 복사하여 .env 파일 생성
-cp .env.example .env
-```
-
-`.env.example`에는 다음 기본값이 포함되어 있습니다:
-```env
-VITE_SERVER_URL=http://localhost:3001
-```
-
-**프로덕션 빌드:**
-프로덕션 환경에서는 `.env.production` 파일을 직접 생성하세요 (`.env.example` 사용하지 않음):
-```env
-# 실제 프로덕션 서버 주소로 변경
-VITE_SERVER_URL=https://api.your-domain.com
-```
-
-#### 백엔드
-
-**개발 환경 (로컬):**
-```bash
-# server/.env.example을 복사하여 server/.env 파일 생성
-cp server/.env.example server/.env
-```
-
-`server/.env.example`에는 다음 개발 환경 기본값이 포함되어 있습니다:
-```env
-PORT=4001
-NODE_ENV=deployment
-CORS_ORIGIN=http://localhost:4001
-
-# 데이터베이스 초기화 설정 (선택사항)
-# RESET_DB_ON_START=false
-```
-
-**프로덕션 환경 (EC2 등):**
-프로덕션 환경에서는 `.env.example`을 복사한 후 **반드시 프로덕션 값으로 수정**하세요:
-
-```bash
-cd server
-cp .env.example .env
-nano .env  # 또는 vi .env
-```
-
-다음과 같이 수정:
-```env
-NODE_ENV=production
-PORT=3001
-CORS_ORIGIN=https://your-domain.com,https://www.your-domain.com
-
-# 데이터베이스 초기화 설정 (선택사항)
-# RESET_DB_ON_START=false
-```
-
-> **중요 사항**:
-> - `.env.example`은 **템플릿**이며, 개발 환경용 기본값만 포함합니다
-> - 프로덕션 환경에서는 `.env.example`을 복사한 후 **반드시 실제 프로덕션 값으로 수정**해야 합니다
-> - 실제 도메인, API 키 등 민감한 정보는 `.env.example`에 포함하지 않습니다
-> - 각 환경(로컬, EC2 등)에서 `.env` 파일을 직접 생성하고 관리해야 합니다
+이 구조는 **유지보수**, **테스트**, **확장성**을 크게 향상시킵니다.
 
 ### 개발 모드 vs 프로덕션 모드
 
@@ -382,54 +363,51 @@ CORS_ORIGIN=https://your-domain.com,https://www.your-domain.com
 
 ## 📦 배포
 
-자세한 배포 가이드는 [DEPLOY.md](./DEPLOY.md)를 참고하세요.
+### EC2 배포 (PM2 사용)
 
-### 빠른 배포 요약
+프로덕션 환경에서는 **AWS EC2**에 배포하고 **PM2**로 프로세스를 관리합니다.
 
-#### Docker를 사용한 배포 (권장)
+**상세 가이드**: [server/EC2_DEPLOY.md](./server/EC2_DEPLOY.md)
 
-```bash
-# 환경 변수 설정
-export PORT=3001
-export CORS_ORIGIN=https://yourdomain.com
-export VITE_SERVER_URL=https://api.yourdomain.com
-
-# 전체 스택 실행
-docker-compose up -d
-```
-
-자세한 내용은 [DOCKER.md](./DOCKER.md)를 참고하세요.
-
-#### 수동 배포 (단일 서버)
-
-프로덕션 모드에서는 **단일 서버로 프론트엔드와 백엔드를 모두 서빙**합니다:
+#### 빠른 배포 요약
 
 ```bash
 # 1. 프론트엔드 빌드
 npm install
 npm run build
 
-# 2. 백엔드 의존성 설치 및 실행
+# 2. 백엔드 환경 변수 설정
 cd server
+cp .env.example .env
+nano .env  # NODE_ENV=production, PORT=3001 등 설정
+
+# 3. 백엔드 의존성 설치 및 PM2로 실행
 npm install --production
-NODE_ENV=production pm2 start ecosystem.config.js --env production
+pm2 start ecosystem.config.js --env production
+pm2 save
 ```
 
-> **중요**: 
-> - 프로덕션 모드(`NODE_ENV=production`)에서는 서버가 자동으로 `dist/` 폴더의 정적 파일을 서빙합니다.
-> - 프론트엔드와 백엔드가 같은 서버에서 서빙되므로 별도의 프론트엔드 서버가 필요하지 않습니다.
-> - `VITE_SERVER_URL` 환경 변수 설정이 필요 없습니다 (상대 경로 사용).
+#### Nginx 설정
 
-#### EC2 배포
+Nginx를 리버스 프록시로 사용하여 HTTPS와 정적 파일 서빙을 처리합니다:
 
-AWS EC2에 배포하는 경우:
-- **Docker 사용**: [server/DOCKER_DEPLOY.md](./server/DOCKER_DEPLOY.md) 참고
-- **PM2/systemd 사용**: [server/EC2_DEPLOY.md](./server/EC2_DEPLOY.md) 참고
+```bash
+# Nginx 설정 파일 복사
+sudo cp server/nginx-omok.conf /etc/nginx/sites-available/api.strategia-mok.store
+sudo ln -s /etc/nginx/sites-available/api.strategia-mok.store /etc/nginx/sites-enabled/
 
-#### S3 배포
+# Nginx 재시작
+sudo nginx -t
+sudo systemctl restart nginx
+```
 
-AWS S3에 프론트엔드를 배포하는 경우:
-- [DEPLOY_S3.md](./DEPLOY_S3.md) 참고
+#### SSL 인증서
+
+Let's Encrypt를 사용하여 무료 SSL 인증서를 발급받습니다:
+
+```bash
+sudo certbot --nginx -d api.strategia-mok.store -d strategia-mok.store
+```
 
 ## 🗄️ 데이터베이스
 
@@ -453,10 +431,6 @@ AWS S3에 프론트엔드를 배포하는 경우:
 - `server/data/*.db-wal`
 - `server/data/*.db-shm`
 
-### 백업
-
-EC2 배포 시 자동 백업 스크립트 예시는 [server/EC2_DEPLOY.md](./server/EC2_DEPLOY.md)를 참고하세요.
-
 ## 🐛 문제 해결
 
 ### 서버 연결 안 됨
@@ -465,103 +439,22 @@ EC2 배포 시 자동 백업 스크립트 예시는 [server/EC2_DEPLOY.md](./ser
 2. 포트 3001이 사용 가능한지 확인
 3. 방화벽 설정 확인
 4. 브라우저 콘솔에서 오류 확인
-5. 프로덕션 모드에서는 `VITE_SERVER_URL` 설정이 필요 없습니다 (같은 서버에서 서빙)
 
-### 502 Bad Gateway 오류 (프로덕션 환경)
+### PM2 프로세스 확인
 
-**증상**: `GET https://api.strategia-mok.store/ 502 (Bad Gateway)` 오류 발생
+```bash
+pm2 list                    # 프로세스 목록
+pm2 logs omok-server        # 로그 확인
+pm2 restart omok-server     # 재시작
+```
 
-**원인**:
-- 백엔드 서버가 실행되지 않음
-- Nginx가 백엔드 서버에 연결할 수 없음
-- 포트 불일치 (Nginx는 3001로 연결하지만 서버는 다른 포트에서 실행)
-- PM2 프로세스가 중지됨
+### Nginx 설정 확인
 
-**해결 방법 (EC2에서 확인)**:
-
-1. **PM2 프로세스 상태 확인**:
-   ```bash
-   pm2 list
-   pm2 logs omok-server
-   ```
-
-2. **서버가 실행 중인지 확인**:
-   ```bash
-   # 포트 3001에서 실행 중인지 확인
-   sudo netstat -tlnp | grep 3001
-   # 또는
-   sudo ss -tlnp | grep 3001
-   ```
-
-3. **서버 재시작**:
-   ```bash
-   cd ~/omok/public_omok/server
-   pm2 restart omok-server
-   # 또는
-   pm2 delete omok-server
-   pm2 start ecosystem.config.js --env production
-   ```
-
-4. **프로덕션 환경 변수 확인**:
-   ```bash
-   # server/.env 파일 확인
-   cat server/.env
-   ```
-   
-   프로덕션 환경에서는 다음과 같이 설정되어 있어야 합니다:
-   ```env
-   NODE_ENV=production
-   PORT=3001
-   CORS_ORIGIN=https://strategia-mok.store,https://www.strategia-mok.store
-   ```
-   
-   > **중요**: 프로덕션 환경에서는 포트 3001을 사용해야 합니다. 개발 환경(4001)과 다릅니다!
-
-5. **Nginx 설정 확인**:
-   ```bash
-   # Nginx 설정 파일 확인
-   sudo nginx -t
-   
-   # Nginx 재시작
-   sudo systemctl restart nginx
-   
-   # Nginx 로그 확인
-   sudo tail -f /var/log/nginx/error.log
-   ```
-
-6. **서버 로그 확인**:
-   ```bash
-   pm2 logs omok-server --lines 50
-   ```
-
-**주의사항**:
-- 개발 환경(`server/.env`): `PORT=4001` 사용
-- 프로덕션 환경(EC2 `server/.env`): `PORT=3001` 사용 (Nginx 설정과 일치해야 함)
-- Nginx는 `proxy_pass http://127.0.0.1:3001;`로 설정되어 있음
-
-### 정적 파일이 로드되지 않을 때 (404 오류)
-
-프론트엔드 파일(`index-*.js` 등)을 찾을 수 없다는 오류가 발생하는 경우:
-
-1. **프론트엔드 빌드 확인**: `dist/` 폴더가 존재하는지 확인
-   ```bash
-   ls -la dist/
-   ```
-
-2. **프로덕션 모드 확인**: `NODE_ENV=production`이 설정되어 있는지 확인
-   ```bash
-   echo $NODE_ENV
-   ```
-
-3. **빌드 재실행**: 프론트엔드를 다시 빌드
-   ```bash
-   npm run build
-   ```
-
-4. **서버 재시작**: 변경사항 적용을 위해 서버 재시작
-   ```bash
-   pm2 restart omok-server
-   ```
+```bash
+sudo nginx -t               # 설정 파일 문법 검사
+sudo systemctl status nginx # Nginx 상태 확인
+sudo tail -f /var/log/nginx/error.log  # 에러 로그
+```
 
 ### 게임이 동기화되지 않음
 
@@ -570,178 +463,21 @@ EC2 배포 시 자동 백업 스크립트 예시는 [server/EC2_DEPLOY.md](./ser
 3. 서버 로그 확인
 4. 브라우저 콘솔에서 WebSocket 연결 확인
 
-### 타이머가 작동하지 않음
-
-1. 게임이 시작되었는지 확인 (보드에 돌이 하나라도 있어야 함)
-2. 멀티플레이어 모드에서는 게임이 시작된 후에만 타이머가 표시됩니다
-3. 싱글플레이어 모드에서는 첫 돌을 놓은 후 타이머가 시작됩니다
-4. 시간 초과 시 차례 전환이 자동으로 이루어지는지 확인
-
-### 금수 오류
-
-1. 렌주룰 로직이 올바르게 작동하는지 확인
-2. 브라우저 콘솔에서 오류 메시지 확인
-
-### 경기 기록이 저장되지 않음
-
-1. 게임이 정상적으로 종료되었는지 확인
-2. 착수 기록이 있는지 확인 (빈 게임은 저장되지 않음)
-3. 서버 데이터베이스 파일 권한 확인
-
-### 타이머 시간 초과 후 차례가 전환되지 않음
-
-**증상**: 초읽기 20초가 지나도 공격 차례가 상대방으로 넘어가지 않음
-
-**원인**: 
-- 싱글플레이어 모드에서 `setTimeout` 사용으로 인한 타이밍 이슈
-- 멀티플레이어 모드에서 서버에 시간 초과 이벤트가 전송되지 않음
-
-**해결 방법**:
-- ✅ 싱글플레이어 모드: `setTimeout` 제거하고 `useGameStore.setState`로 직접 차례 전환
-- ✅ 멀티플레이어 모드: 서버에 `timeout` 이벤트 전송 및 서버 측 차례 전환 처리 추가
-- ✅ 차례 전환 시 새로운 차례 플레이어의 턴 타이머 자동 리셋
-
-**참고**: `src/components/omok/Timer.jsx`와 `server/server.js`의 `timeout` 이벤트 핸들러 확인
-
-### 규칙 설명창이 바둑알 뒤에 표시됨
-
-**증상**: 규칙 버튼을 클릭하면 규칙 설명창이 바둑알 뒤에 가려져 보임
-
-**원인**: 
-- Rule 컴포넌트가 Navbar 내부에서 렌더링되어 stacking context 문제 발생
-- z-index가 충분히 높지 않음
-
-**해결 방법**:
-- ✅ React Portal을 사용하여 `document.body`에 직접 렌더링
-- ✅ z-index를 `z-[9999]`로 설정하여 최상위에 표시
-- ✅ 배경 오버레이에 반투명 배경 추가
-
-**참고**: `src/components/omok/Rule.jsx`에서 `createPortal` 사용
-
-### 개발자 도구에 소켓 ID 등 개발 정보 노출
-
-**증상**: 프로덕션 환경에서도 개발자 도구에 소켓 ID, 디버그 로그 등이 표시됨
-
-**원인**: 
-- 모든 환경에서 `console.log`가 출력됨
-- 프로덕션 모드와 개발 모드 구분 없음
-
-**해결 방법**:
-- ✅ `import.meta.env.DEV`를 사용하여 개발 모드에서만 로그 출력
-- ✅ 프로덕션 빌드 시 자동으로 로그가 숨겨짐
-- ✅ 소켓 ID 등 민감한 정보는 개발 모드에서만 표시
-
-**수정된 파일**:
-- `src/services/socketService.js`
-- `src/stores/useGameStore.js`
-- `src/components/omok/MultiplayerLobby.jsx`
-- `src/stores/useMultiplayerStore.js`
-
-### .env 파일이 Git에 올라가는 보안 문제
-
-**증상**: `.env` 파일이 Git 저장소에 포함되어 민감한 정보가 노출됨
-
-**원인**: 
-- `.env` 파일이 Git에 추적되고 있었음
-- `.gitignore`에 명시되어 있었지만 이미 추적 중이었음
-
-**해결 방법**:
-1. Git 추적에서 제거:
-   ```bash
-   git rm --cached .env .env.production server/.env server/.env.production
-   ```
-
-2. `.gitignore` 업데이트:
-   ```
-   .env
-   .env.production
-   .env.*.local
-   server/.env
-   server/.env.production
-   server/.env.*.local
-   ```
-
-3. `.env.example` 파일 생성 (템플릿):
-   - 개발 환경용 기본값만 포함
-   - 프로덕션 환경의 실제 값은 포함하지 않음
-   - 각 환경에서 `.env.example`을 복사하여 `.env` 생성
-
-**중요**: 
-- `.env.example`은 Git에 올라가지만 실제 값은 포함하지 않음
-- 각 환경(로컬, EC2)에서 `.env.example`을 복사한 후 실제 값으로 수정해야 함
-
-### EC2에서 git pull 시 충돌 발생
-
-**증상**: `git pull origin main` 실행 시 `.env` 파일 관련 충돌 발생
-
-**원인**: 
-- 로컬에서 `.env` 파일을 삭제했지만 원격에는 수정된 버전이 있음
-- modify/delete 충돌 발생
-
-**해결 방법**:
-```bash
-# 1. rebase 중단
-git rebase --abort
-
-# 2. merge 방식으로 pull
-git pull origin main
-
-# 3. 충돌 발생 시 .env 파일 삭제 확정
-git rm .env server/.env
-
-# 4. 커밋
-git commit -m "Remove .env files from tracking"
-
-# 5. .env.example에서 .env 파일 재생성
-cp server/.env.example server/.env
-# 프로덕션 값으로 수정
-nano server/.env
-```
-
-### .env 파일이 자동으로 로드되지 않음
-
-**증상**: `server/.env` 파일에 `PORT=4001`로 설정했지만 서버가 3001 포트로 실행됨
-
-**원인**: 
-- Node.js는 기본적으로 `.env` 파일을 자동으로 로드하지 않음
-- `dotenv` 패키지가 설치되지 않았거나 로드되지 않음
-
-**해결 방법**:
-1. `dotenv` 패키지 설치:
-   ```bash
-   cd server
-   npm install dotenv
-   ```
-
-2. `server.js` 상단에 추가:
-   ```javascript
-   import 'dotenv/config';
-   ```
-
-3. 이제 `.env` 파일이 자동으로 로드되어 `process.env.PORT`가 올바르게 읽힘
-
-**확인**:
-- `npm run dev` 실행 시 `server/.env`의 `PORT=4001`이 적용됨
-- 프로덕션 환경에서도 `.env` 파일이 자동으로 로드됨
-
 ## 📚 추가 문서
 
 - [멀티플레이어 가이드](./README_MULTIPLAYER.md) - 멀티플레이어 기능 상세 설명
-- [배포 가이드](./DEPLOY.md) - 프로덕션 배포 방법
-- [Docker 배포 가이드](./DOCKER.md) - Docker를 사용한 배포 방법
-- [S3 배포 가이드](./DEPLOY_S3.md) - AWS S3 배포 방법
 - [EC2 배포 가이드](./server/EC2_DEPLOY.md) - AWS EC2 배포 방법
-- [서버 연결 가이드](./서버_연결_가이드.md) - 서버 연결 설정 방법
+- [서버 문서](./server/README.md) - 백엔드 서버 상세 설명
 
 ## 🔒 보안 고려사항
 
 - 게스트 인증은 localStorage 기반으로 구현되어 있습니다
 - 프로덕션 환경에서 개발자 로그 자동 숨김 처리
 - 소켓 ID 등 민감한 정보는 프로덕션 모드에서 노출되지 않습니다
-- 프로덕션 환경에서는 HTTPS 사용을 권장합니다
-- CORS 설정을 적절히 구성하여 허용된 도메인만 접근하도록 설정하세요
+- HTTPS 사용 (Let's Encrypt)
+- CORS 설정을 통한 허용 도메인 제한
 - 환경 변수를 통한 민감한 정보 관리
-- 데이터베이스 파일은 Git에서 제외되어 있습니다
+- 데이터베이스 파일은 Git에서 제외
 
 ## 🤝 기여
 
