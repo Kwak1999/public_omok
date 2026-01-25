@@ -1,49 +1,49 @@
-version: '3.8'
-
-services:
-  # 백엔드 서버
-  backend:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    container_name: omok-backend
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=production
-      - PORT=${PORT:-3001}
-      - CORS_ORIGIN=${CORS_ORIGIN:-https://strategia-mok.store,https://www.strategia-mok.store}
-    volumes:
-      # 데이터베이스 영구 저장
-      - ./server/data:/app/data
-      - ./server/logs:/app/logs
-    restart: unless-stopped
-    networks:
-      - omok-network
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://3.36.70.5:3001/api/rooms', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # 프론트엔드
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        # 빌드 시 서버 URL 설정 (환경 변수 또는 기본값 사용)
-        # 백엔드 서버 주소로 변경하세요 (예: https://api.strategia-mok.store 또는 http://your-ec2-ip:3001)
-        - VITE_SERVER_URL=${VITE_SERVER_URL:-https://api.strategia-mok.store}
-    container_name: omok-frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-    networks:
-      - omok-network
-
-networks:
-  omok-network:
-    driver: bridge
+#version: '3.8'
+#
+#services:
+#  # 백엔드 서버
+#  backend:
+#    build:
+#      context: ./server
+#      dockerfile: Dockerfile
+#    container_name: omok-backend
+#    ports:
+#      - "3001:3001"
+#    environment:
+#      - NODE_ENV=production
+#      - PORT=${PORT:-3001}
+#      - CORS_ORIGIN=${CORS_ORIGIN:-https://strategia-mok.store,https://www.strategia-mok.store}
+#    volumes:
+#      # 데이터베이스 영구 저장
+#      - ./server/data:/app/data
+#      - ./server/logs:/app/logs
+#    restart: unless-stopped
+#    networks:
+#      - omok-network
+#    healthcheck:
+#      test: ["CMD", "node", "-e", "require('http').get('http://3.36.70.5:3001/api/rooms', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#
+#  # 프론트엔드
+#  frontend:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#      args:
+#        # 빌드 시 서버 URL 설정 (환경 변수 또는 기본값 사용)
+#        # 백엔드 서버 주소로 변경하세요 (예: https://api.strategia-mok.store 또는 http://your-ec2-ip:3001)
+#        - VITE_SERVER_URL=${VITE_SERVER_URL:-https://api.strategia-mok.store}
+#    container_name: omok-frontend
+#    ports:
+#      - "80:80"
+#    depends_on:
+#      - backend
+#    restart: unless-stopped
+#    networks:
+#      - omok-network
+#
+#networks:
+#  omok-network:
+#    driver: bridge

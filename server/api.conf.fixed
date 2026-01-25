@@ -1,12 +1,12 @@
 # HTTP 서버 블록 - HTTPS로 리다이렉트
 server {
-    if ($host = api.strategia-mok.store) {
+    if ($host = strategia-mok.store) {
         return 301 https://$host$request_uri;
     } # managed by Certbot
 
     listen 80;
     listen [::]:80;
-    server_name api.strategia-mok.store;
+    server_name strategia-mok.store;
     return 404; # managed by Certbot
 }
 
@@ -14,11 +14,12 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name api.strategia-mok.store;
+    server_name strategia-mok.store;
 
     # SSL 인증서 (Certbot이 관리)
-    ssl_certificate /etc/letsencrypt/live/api.strategia-mok.store/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/api.strategia-mok.store/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/strategia-mok.store/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/
+    strategia-mok.store/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
