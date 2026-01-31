@@ -269,48 +269,61 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                         >
                             {/* 실제 보드 크기 */}
                             <div className="relative" style={{ width: BOARD_LENGTH, height: BOARD_LENGTH }}>
-                                {/* 세로줄 */}
-                                {Array.from({ length: BOARD_SIZE }).map((_, i) => (
-                                    <div
-                                        key={`v-${i}`}
-                                        className="absolute bg-amber-800"
-                                        style={{
-                                            left: i * CELL_GAP,
-                                            top: 0,
-                                            width: 1,
-                                            height: BOARD_LENGTH,
-                                        }}
-                                    />
-                                ))}
+                                {/* 세로줄 (퍼센트 기반) */}
+                                {Array.from({ length: BOARD_SIZE }).map((_, i) => {
+                                    const pos = (i / (BOARD_SIZE - 1)) * 100;
+                                    return (
+                                        <div
+                                            key={`v-${i}`}
+                                            className="absolute bg-amber-800"
+                                            style={{
+                                                left: `${pos}%`,
+                                                top: 0,
+                                                width: 1,
+                                                height: "100%",
+                                                transform: "translateX(-0.5px)",
+                                            }}
+                                        />
+                                    );
+                                })}
 
-                                {/* 가로줄 */}
-                                {Array.from({ length: BOARD_SIZE }).map((_, i) => (
-                                    <div
-                                        key={`h-${i}`}
-                                        className="absolute bg-amber-800"
-                                        style={{
-                                            left: 0,
-                                            top: i * CELL_GAP,
-                                            width: BOARD_LENGTH,
-                                            height: 1,
-                                        }}
-                                    />
-                                ))}
+                                {/* 가로줄 (퍼센트 기반) */}
+                                {Array.from({ length: BOARD_SIZE }).map((_, i) => {
+                                    const pos = (i / (BOARD_SIZE - 1)) * 100;
+                                    return (
+                                        <div
+                                            key={`h-${i}`}
+                                            className="absolute bg-amber-800"
+                                            style={{
+                                                left: 0,
+                                                top: `${pos}%`,
+                                                width: "100%",
+                                                height: 1,
+                                                transform: "translateY(-0.5px)",
+                                            }}
+                                        />
+                                    );
+                                })}
 
-                                {/* 성혈 */}
-                                {STAR_POSITIONS.map(({ row, col }, idx) => (
-                                    <span
-                                        key={idx}
-                                        className="absolute rounded-full bg-amber-800"
-                                        style={{
-                                            width: 8,
-                                            height: 8,
-                                            left: col * CELL_GAP - 4,
-                                            top: row * CELL_GAP - 4,
-                                            pointerEvents: "none",
-                                        }}
-                                    />
-                                ))}
+                                {/* 성혈 (퍼센트 기반) */}
+                                {STAR_POSITIONS.map(({ row, col }, idx) => {
+                                    const x = (col / (BOARD_SIZE - 1)) * 100;
+                                    const y = (row / (BOARD_SIZE - 1)) * 100;
+                                    return (
+                                        <span
+                                            key={idx}
+                                            className="absolute rounded-full bg-amber-800"
+                                            style={{
+                                                width: 8,
+                                                height: 8,
+                                                left: `${x}%`,
+                                                top: `${y}%`,
+                                                transform: "translate(-50%, -50%)",
+                                                pointerEvents: "none",
+                                            }}
+                                        />
+                                    );
+                                })}
 
                                 {/* Cell */}
                                 {Array.from({ length: BOARD_SIZE }).map((_, row) =>
