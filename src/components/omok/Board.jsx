@@ -10,9 +10,9 @@ import { getGuestId } from '../../utils/guestAuth';
 import Timer from './Timer';
 
 const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = null }) => {
-    const { 
-        selectedPosition, 
-        placeStone, 
+    const {
+        selectedPosition,
+        placeStone,
         currentPlayer,
         clearSelectedPosition,
         winner,
@@ -20,14 +20,14 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
         moves,
         board
     } = useGameStore();
-    
+
     const { isMultiplayer, myPlayer, gameEndedPlayer, surrender, players } = useMultiplayerStore();
     const [showLobby, setShowLobby] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
-    
+
     // 게임이 끝났을 때는 gameEndedPlayer를 사용, 아니면 myPlayer 사용
     const displayPlayer = winner && gameEndedPlayer ? gameEndedPlayer : myPlayer;
-    
+
     // 공개방 데이터
     const socket = socketService?.getSocket();
     const mySocketId = socket?.id;
@@ -36,7 +36,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
     const guestReady = guestPlayer?.isReady || false;
     const myPublicPlayer = isPublicRoom ? roomData?.players?.find(p => p.socketId === mySocketId) : null;
     const isPlaying = isPublicRoom && roomData?.status === 'playing';
-    
+
     // 비공개 방에서 게임이 시작되었는지 확인 (보드에 돌이 하나라도 있으면 시작된 것으로 간주)
     const hasStonesOnBoard = board.some(row => row.some(cell => cell !== null));
     const isPrivateGameStarted = !isPublicRoom && isMultiplayer && hasStonesOnBoard;
@@ -97,19 +97,19 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
     const [boardPadding, setBoardPadding] = React.useState(6); // 초기값을 모바일 패딩으로 설정
     const [borderPx, setBorderPx] = React.useState(2); // 초기값을 모바일 border로 설정
     const [isCalculated, setIsCalculated] = React.useState(false); // 계산 완료 여부
-    
+
     React.useEffect(() => {
         const calculateScale = () => {
             // 뷰포트가 준비될 때까지 대기
             if (typeof window === 'undefined' || !window.innerWidth) {
                 return;
             }
-            
+
             const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 375;
             const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 667;
             const isMobileView = viewportWidth < 640; // sm 브레이크포인트
             setIsMobile(isMobileView);
-            
+
             // 화면 크기에 따른 패딩 설정 (Tailwind 브레이크포인트 기준)
             // p-1.5 = 6px (모바일), p-2 = 8px (sm), p-3 = 12px (md)
             if (viewportWidth >= 768) {
@@ -119,53 +119,53 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
             } else {
                 setBoardPadding(6); // 모바일: 6px
             }
-            
+
             // 화면 크기에 따른 border 설정 (border-2, sm:border-4)
             setBorderPx(viewportWidth >= 640 ? 4 : 2);
-            
+
             // PC에서는 스케일을 적용하지 않음
             if (!isMobileView) {
                 setBoardScale(1);
                 setIsCalculated(true);
                 return;
             }
-            
+
             // 모바일에서만 스케일 계산
             // 매우 작은 화면(150px~640px)에서도 보드가 제대로 보이도록 조정
             const horizontalPadding = Math.max(viewportWidth * 0.05, 8); // 최소 8px, 화면의 5%
             const verticalPadding = Math.max(viewportHeight * 0.25, 180); // 최소 180px, 화면의 25%
-            
+
             const availableWidth = Math.max(viewportWidth - horizontalPadding * 2, 120); // 최소 120px 보장
             const availableHeight = Math.max(viewportHeight - verticalPadding, 250); // 최소 250px 보장
-            
+
             const currentPadding = 6; // 모바일 패딩
             const boardWithPadding = BOARD_LENGTH + currentPadding * 2; // 보드 + 내부 패딩
-            
+
             const scaleByWidth = availableWidth / boardWithPadding;
             const scaleByHeight = availableHeight / boardWithPadding;
-            
+
             // 더 작은 스케일을 선택하되, 최소 0.35 (35%)로 제한하여 보드가 너무 작아지지 않도록
             const scale = Math.min(scaleByWidth, scaleByHeight, 1);
             setBoardScale(Math.max(scale, 0.35)); // 최소 35% 스케일
             setIsCalculated(true);
         };
-        
+
         // 즉시 계산 시도
         calculateScale();
-        
+
         // DOM이 완전히 로드된 후 다시 계산 (일부 브라우저에서 필요)
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', calculateScale);
         }
-        
+
         // 약간의 지연 후 다시 계산 (뷰포트가 안정화될 때까지)
         const timeoutId = setTimeout(calculateScale, 100);
-        
+
         window.addEventListener('resize', calculateScale);
         window.addEventListener('orientationchange', () => {
             setTimeout(calculateScale, 100); // orientationchange 후 뷰포트가 안정화될 때까지 대기
         });
-        
+
         return () => {
             clearTimeout(timeoutId);
             document.removeEventListener('DOMContentLoaded', calculateScale);
@@ -178,7 +178,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
         // 중앙정렬, 배경색, 화면 전체 높이
         <div className="min-h-screen flex flex-col items-center bg-slate-100 dark:bg-neutral-700 pt-[60px] sm:pt-[70px] md:pt-[80px] pb-4 sm:pb-8 px-2 sm:px-4 md:px-6">
             {showLobby && <MultiplayerLobby onClose={() => setShowLobby(false)} />}
-            
+
             <div className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-2xl flex-shrink-0">
                 {/* 멀티플레이어 모드 표시 */}
                 {isMultiplayer && (
@@ -195,7 +195,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                         )}
                     </div>
                 )}
-                
+
                 {/* 승자/패자 표시 또는 현재 플레이어 표시 */}
                 {winner ? (
                     isMultiplayer && displayPlayer ? (
@@ -227,7 +227,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                             </span>
                         ) : (
                             <>
-                                현재 플레이어: 
+                                현재 플레이어:
                                 <span className={`ml-2 ${currentPlayer === 'black' ? 'text-black' : 'text-gray-600'}`}>
                                     {currentPlayer === 'black' ? '⚫ 흑돌' : '⚪ 백돌'}
                                 </span>
@@ -238,35 +238,36 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
 
                 {/* 보드 목재 배경 + 테두리 */}
                 {(() => {
-                    const scale = Math.min(boardScale, 1);
+                    const borderPx = isMobile ? 2 : 4;           // ✅ window.innerWidth 사용 X
+                    const scale = isMobile ? Math.min(boardScale, 1) : 1;
 
-                    // ✅ padding + border까지 포함한 "바깥 박스의 실제 크기"
+                    // ✅ padding + border 포함한 바깥 크기
                     const outerSize = BOARD_LENGTH + boardPadding * 2 + borderPx * 2;
 
                     return (
+                        // ✅ [레이아웃 박스] : 여기서는 절대 outerSize를 늘리지 않음 (클리핑 방지)
                         <div
-                            className="rounded-md shadow-lg bg-amber-200 border-amber-700 flex-shrink-0 inline-block relative z-0"
+                            className="flex-shrink-0"
                             style={{
-                                // ✅ border는 state 값으로 관리 (리렌더링 시 업데이트)
-                                borderStyle: "solid",
-                                borderWidth: borderPx,
-
-                                // ✅ padding도 state 값으로 통일 (모든 모서리 동일)
-                                padding: boardPadding,
-
-                                transform: `scale(${scale})`,
-                                transformOrigin: "top center",
-
-                                // ✅ scale 보정도 outerSize 기준으로 정확히
-                                width: `${outerSize / scale}px`,
-                                height: `${outerSize / scale}px`,
-
-                                marginBottom:
-                                    scale < 1
-                                        ? `${Math.max(outerSize * (1 - scale) + 50, 50)}px`
-                                        : "16px",
+                                width: outerSize,
+                                height: outerSize,
                             }}
                         >
+                            {/* ✅ [시각 박스] : 여기만 scale */}
+                            <div
+                                className="rounded-md shadow-lg bg-amber-200 border-amber-700 inline-block relative z-0"
+                                style={{
+                                    borderStyle: "solid",
+                                    borderWidth: borderPx,
+                                    padding: boardPadding,
+                                    width: outerSize,
+                                    height: outerSize,
+                                    transform: `scale(${scale})`,
+                                    transformOrigin: "top center",
+                                }}
+                            >
+
+
                             {/* 실제 보드 크기 */}
                             <div className="relative" style={{ width: BOARD_LENGTH, height: BOARD_LENGTH }}>
                                 {/* 세로줄 (퍼센트 기반) */}
@@ -333,14 +334,15 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                 )}
                             </div>
                         </div>
+                    </div>
                     );
                 })()}
 
                 {/* 착수 버튼 영역 */}
-                <div 
+                <div
                     className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 justify-center w-full px-2 sm:px-4 relative z-10"
                     style={{
-                        marginTop: isMobile && boardScale < 1 
+                        marginTop: isMobile && boardScale < 1
                             ? `${Math.max(-((BOARD_LENGTH + 12) * (1 - boardScale)) + 30, -20)}px`
                             : '0px',
                     }}
@@ -383,7 +385,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                             )}
                             {/* 게임이 끝났을 때: 공개방이고 방장이면 새 게임 버튼 (ready 상태 확인), 일반 유저는 버튼 없음 */}
                             {isPublicRoom && isHost ? (
-                                <button 
+                                <button
                                     onClick={() => {
                                         resetGame((response) => {
                                             if (!response.success) {
@@ -403,7 +405,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                 </button>
                             ) : !isPublicRoom ? (
                                 // 공개방이 아닐 때는 기존대로 새 게임 버튼 표시
-                                <button 
+                                <button
                                     onClick={resetGame}
                                     className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-500 text-white rounded-md hover:bg-green-600 transition font-semibold"
                                 >
@@ -444,7 +446,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                             ) : (
                                 // 게임 진행 중: 착수 버튼
                                 <>
-                                    <button 
+                                    <button
                                         onClick={handlePlaceStone}
                                         disabled={!selectedPosition || (isMultiplayer && myPlayer !== currentPlayer)}
                                         className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
@@ -456,7 +458,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                         착수
                                     </button>
                                     {selectedPosition && (
-                                        <button 
+                                        <button
                                             onClick={handleCancel}
                                             className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
                                         >
@@ -468,7 +470,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                         ) : (
                             // 공개방이 아니거나 플레이어가 2명이 아닐 때: 기존 착수 버튼
                             <>
-                                <button 
+                                <button
                                     onClick={handlePlaceStone}
                                     disabled={!selectedPosition || (isMultiplayer && myPlayer !== currentPlayer)}
                                     className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-md font-semibold transition ${
@@ -480,7 +482,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                                     착수
                                 </button>
                                 {selectedPosition && (
-                                    <button 
+                                    <button
                                         onClick={handleCancel}
                                         className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-gray-500 text-white rounded-md hover:bg-gray-600 transition font-semibold"
                                     >
@@ -501,7 +503,7 @@ const Board = ({ isPublicRoom = false, onToggleReady, onStartGame, roomData = nu
                 {!isMultiplayer && !winner && board.some(row => row.some(cell => cell !== null)) && (
                     <Timer />
                 )}
-                
+
                 {/* 공개방 모드일 때 게임 종료 후 Ready 버튼 (유저만) */}
                 {isPublicRoom && roomData && roomData.players.length === 2 && winner && !isHost ? (
                     <div className="flex gap-3 justify-center">
